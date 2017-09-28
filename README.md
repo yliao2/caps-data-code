@@ -1,6 +1,6 @@
 # 2017.9.27
-# temp_rankplot20170927.R
-# function(year, route, time(t)) 
+ temp_rankplot20170927.R
+ function(year, route, time(t)) 
 # for store counts based on original logmile (0.019, 0.038, 0.057,...)
 #   - predictions using LOESS
 #   - rank(original counts|t) & rank(predictions|t)
