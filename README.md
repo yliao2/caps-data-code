@@ -9,7 +9,7 @@
     data: year = 2015, route = 71, t = "Weekend" is primarily used
     
     plots:
-     - Logmile vs. counts given t (ggplot)
-     - cumsum( size = sum(diff) in individual ordered rank ) vs. cum( percentage of crashes ) given t
-     - add lines of predictions into the plot
+    - Logmile vs. counts given t (ggplot)
+    - cumsum( size = sum(diff) in individual ordered rank ) vs. cum( percentage of crashes ) given t
+    - add lines of predictions into the plot
     ---------------------------------------------------------------------
