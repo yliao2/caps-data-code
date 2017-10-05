@@ -13,3 +13,7 @@
     - cumsum( size = sum(diff) in individual ordered rank ) vs. cum( percentage of crashes ) given t
     - add lines of predictions into the plot
     ---------------------------------------------------------------------
+
+
+# 2017.10.4
+    
