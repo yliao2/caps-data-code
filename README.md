@@ -40,3 +40,6 @@
     test:
     - quasi KS test (unfinish)
     
+    draft:
+    - define variables mentioned in the function part
+    - descriptions based on the plots part
