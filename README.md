@@ -43,3 +43,32 @@
     draft:
     - define variables mentioned in the function part
     - descriptions based on the plots part
+    --------------------------------------------------------------------------
+    
+  
+# 2017.10.11
+    all_plot.R (update)
+    
+    make quasi-KS test, compare Obs. and Pred., used as an assessment
+    make chi-squared test
+    generate results for level set setting (updated)
+    ------------------------------------------------
+    add:
+        thres.pred.p = porpotion of pred. events above threshold (threshold/alpha)
+        pred.times = # segments of Pred. above threshold (threshold/alpha)
+    
+    plots:
+    - size of hotspot vs. threshold (decreasing function, threshold-, size+ vice versa) (a)
+    - HS above threshold (based on observations) vs. level alpha (obs. vs. pred.) (update)
+      *It was shown wrong on 2017.10.4
+    - % matched segments vs. alpha (b)
+    - surveillance plot (c) (2017.10.4)
+    - relative distribution (cdf & pdf/pmf)
+    
+    tests:
+    - quasi KS test for surveilance plot (different significance level) (c)
+    - quasi KS test for {size of HS vs. threshold}
+    - chi-squared & quasi KS for relative distribution vs. uniform (discrete)
+    -------------------------------------------------------------------------
+    
+    
