@@ -69,6 +69,9 @@
     - quasi KS test for surveilance plot (different significance level) (c)
     - quasi KS test for {size of HS vs. threshold}
     - chi-squared & quasi KS for relative distribution vs. uniform (discrete)
+    
+    draft:
+    - add: comments on new plots and tests (temp)
     -------------------------------------------------------------------------
     
     
