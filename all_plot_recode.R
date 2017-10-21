@@ -4,7 +4,7 @@ library(tidyverse)
 library(ggplot2)
 library(sqldf)
 library(chron)
-
+library(data.table)
 
 
 
@@ -50,7 +50,7 @@ c <- crash %>% select(CrashDate, CrashTime, HighwayID, HWY_Route, DayOfWeekUSA,
 
 
 
-#reference of Logmile on given route
+#reference of Logmile given route
 ref.logmile <- function(route)
 {
   highwaycrash %>% filter(Route == route) %>% select(Logmile) %>% 
@@ -114,6 +114,14 @@ obs.rank <- function(year, route, time)
   return(z)
 }
 
+#count # rank
+sum.rank <- function(data)
+{
+  out <- data %>% select(rank) %>% group_by(rank) %>% count() %>%
+    mutate(same.rank = n) %>% select(-n)
+  return(out)
+}
+
 #level set setting (weekend & weekdays)
 z <- obs.rank(2015, 71, "Weekend")
 z1 <- z %>% filter(Weekend==1) %>% arrange(rank)
@@ -121,39 +129,71 @@ z2 <- z %>% filter(Weekend==2) %>% arrange(rank)
 
 lvl.set <- function(data, alpha)
 {
-  lvl <- unique(data$rank)
-  n <- length(c(lvl))
+  lvl <- sum.rank(data)
+  l <- nrow(lvl)
+  n <- sum(lvl$same.rank)
   out <- matrix(0, length(alpha), 5)
   for (i in 1:length(alpha))
   {
     out[i, 1] <- alpha[i]
-    if(alpha[i]>1/n)
+    if(alpha[i]>lvl$same.rank[1]/n)
     {
-      for (j in 1:n)
+      for (j in 1:l)
       {
-        if((j/n)<=alpha[i])
+        if((sum(lvl$same.rank[1:j])/n)<=alpha[i])
         {
-          out[i, 2] <- j/n
-          out[i, 3] <- j
-          out[i, 4] <- sum(z1[which(data$rank<=j),]$p)
-          out[i, 5] <- min(z1[which(data$rank<=j),]$p)
+          out[i, 2] <- sum(lvl$same.rank[1:j])/n
+          out[i, 3] <- sum(lvl$same.rank[1:j])
+          out[i, 4] <- sum(data[which(data$rank<=j),]$p)
+          out[i, 5] <- min(data[which(data$rank<=j),]$p)
         }
         else{out[i, 2] <- out[i, 2]; out[i, 3] <- out[i, 3];
         out[i, 4] <- out[i, 4]; out[i, 5] <- out[i, 5]}
       }
     }
     else{out[i, 2] <- 0; out[i, 3] <- 0; out[i, 4] <- 0; 
-         out[i, 5] <- max(z1$p)}
+    out[i, 5] <- max(z1$p)}
   }
-  colnames(out) <- c("alpha","level", "nrank", "pct.events", "thres")
+  colnames(out) <- c("alpha","level", "nseg", "pct.events", "thres")
   return(out)
 }
 
+#single alpha = 0.20
+#-------------------
+alpha = 0.20
+t1 <- data.frame(lvl.set(z1, alpha))
+t2 <- data.frame(lvl.set(z2, alpha))
+
+
+plot(z1$Logmile, z1$p, xlab = "Logmile", cex = 0, ylab = "p", main = "weekday")
+segments(x0 = z1$Logmile, y0 = z1$p, y1 = 0)
+points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p)
+abline(h = t1$thres, col = "darkgray")
+text(x = 32, y = t1$thres, labels = round(t1$thres, 4), pos = 3)
+
+
+plot(z2$Logmile, z2$p, xlab = "Logmile", cex = 0, ylab = "p", main = "weekend")
+segments(x0 = z2$Logmile, y0 = z2$p, y1 = 0)
+points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p)
+abline(h = t2$thres, col = "darkgray")
+text(x = 32, y = t2$thres, labels = round(t2$thres, 4), pos = 3)
 
 
 #sequence of alphas (alpha = seq(0, 1, length = 11))
 #====================================================
-#surveillance plot (level alpha vs. % events in HS)
+#surveillance plot (type 1) (size of distance vs. % events)
+#----------------------------------------------------------
+z3 <- z1 %>% select(diff, rank, p) %>% group_by(rank) %>% 
+  mutate(diff = round(diff, 3), log.size = sum(diff), log.rate = sum(p)) %>% distinct()
+z4 <- z2 %>% select(diff, rank, p) %>% group_by(rank) %>% 
+  mutate(diff = round(diff, 3), log.size = sum(diff), log.rate = sum(p)) %>% distinct()
+
+plot(x = cumsum(z3$log.size), y = cumsum(z3$log.rate), type = "s", 
+     xlab = "size of distance", ylab = "%crashes")
+lines(x = cumsum(z4$log.size), y = cumsum(z4$log.rate), type = "s", col = 4)
+
+
+#surveillance plot (type 2) (level alpha vs. % events in HS)
 #--------------------------------------------------
 alpha <- seq(0, 1, by = 0.01)
 z1.lvl <- data.frame(lvl.set(z1, alpha))
@@ -169,25 +209,24 @@ text(x = c(0.3, 0.3),
      pos = 3, col = c(1, 4))
 legend("bottomright", c("wk", "wkd"), col = c(1, 4), lty = 1)
 
+
 #ks test for surveillance plot (not significant)
 #-----------------------------------------------
 t <- ks.results(s1 = z1.lvl$pct.events, s2 = z2.lvl$pct.events, alpha = 0.05)
-data.frame(cbind(alpha, d = t$d)) %>% filter(d == t$max.d)
+data.frame(cbind(alpha, d = abs(t$d))) %>% filter(d == t$max.d)
 
-plot(x = alpha, y = t$d, type = "s", xlab = expression(alpha), ylab = "distance")
+plot(x = alpha, y = abs(t$d), type = "s", xlab = expression(alpha), ylab = "distance")
 abline(h = 0, col = "darkgray")
-segments(x0 = c(0.74,0.75,0.76), y0 = t$max.d, y1 = 0, col = "darkgray")
-text(x = 0.74, y = t$max.d, labels = round(t$max.d, 5), pos = 3)
 
 #percentage of crashes in a size/alpha (%) of highest crash rate segments
-#ex. alpha = 0.3, proportion of segments id as HS is around 30%, 0.1146 of
+#ex. alpha = 0.3, proportion of segments id as HS is around 30%, 100% of
 #    total crashes happened in these segments during weekend, where as
-#    0.151 of total crashes happened in these segments during weekdays
+#    0.9433 of total crashes happened in these segments during weekdays
 #
 #ks test shows no significance between distributions for weekend & weekdays
-#max distance between two distributions happends when alpha = 0.74, 0.75, 0.76,
-#with max(D) = 0.072
-#------------------------------------------------------------------------------
+#max distance between two distributions happends when alpha = 0.11,
+#with max(D) = 0.0851
+#--------------------------------------------------------------------------
 
 
 
@@ -202,13 +241,13 @@ plot(x = z1.lvl$thres, y = z1.lvl$level, type = "s",
      xlim = c(0, max(z1.lvl$thres, z2.lvl$thres)))
 lines(x = z2.lvl$thres, y = z2.lvl$level, type = "s", col = 4)
 abline(v = 0.007, col = "darkgrey")
-text(x = c(0.007, 0.007), y = c(z1.lvl[alpha == 0.29,]$level, z2.lvl[alpha == 0.4,]$level),
-     labels = round(c(z1.lvl[alpha == 0.29,]$level, z2.lvl[alpha == 0.4,]$level),4), 
-     col = c(1, 4), pos = 3)
+text(x = c(0.007, 0.007), y = c(z1.lvl[alpha == 0.01,]$level, z2.lvl[alpha == 0.01,]$level),
+     labels = round(c(z1.lvl[alpha == 0.01,]$level, z2.lvl[alpha == 0.01,]$level),4), 
+     col = c(1, 4), pos = c(1,3))
 legend("topright", c("wk", "wkd"), col = c(1, 4), lty = 1)
 
 #ex. under the same threshold = 0.007, % of segments id as HS (true level)
-#    is 0.2647 for weekdays, whereas % of segments id as HS is 0.3529
+#    is 0.0098 for weekdays, whereas % of segments id as HS is 0.0082
 #    for weekend
 #-------------------------------------------------------------------------
 
@@ -226,23 +265,22 @@ legend("topright", c("wk", "wkd"), col = c(1, 4), lty = 1)
 m1 <- NULL
   for (i in 1:nrow(z1.lvl))
 {
-  max <- length(unique(c(z1[z1$rank<=z1.lvl$nrank[i],]$Logmile, 
-                         z2[z2$rank<=z2.lvl$nrank[i],]$Logmile)))
+  max <- length(unique(c(z1[1:z1.lvl$nseg[i],]$Logmile, 
+                         z2[1:z2.lvl$nseg[i],]$Logmile)))
   
-  cond <- z1[z1$rank<=z1.lvl$nrank[i],]$Logmile %in% 
-          z2[z2$rank<=z2.lvl$nrank[i],]$Logmile
+  cond <- z1[1:z1.lvl$nseg[i],]$Logmile %in% 
+          z2[1:z2.lvl$nseg[i],]$Logmile
   
   m1 <- c(m1, sum(cond)/max)
 }
-
 plot(x = alpha, y = m1, type = "s", xlab = expression(alpha), ylab = "% matches")
 abline(v = c(0.1, 0.2), col = "darkgrey")
 text(x = c(0.1, 0.2), y = m1[c(11, 21)], labels = round(m1[c(11, 21)],4), pos = 3)
 
-#ex. under the same alpha/size/(%segments id HS) = 0.1, 0.33 of segments
-#    for weekdays and weekend are matched. if alpha = 0.2, 0.71 of segments
+#ex. under the same alpha/size/(%segments id HS) = 0.1, 47.93% of segments
+#    for weekdays and weekend are matched. if alpha = 0.2, 59.03% of segments
 #    given different time period are matched.
-#--------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 
 
 
@@ -262,6 +300,7 @@ abline(h = 1, col = "darkgrey")
 
 r1 <- r/sum(r[is.finite(r)])
 r2 <- rep(1, n)/n
+t3 <- ks.results(s1 = cumsum(r1[is.finite(r1)]), s2 = cumsum(r2), alpha = 0.05)
 
 #convert to uniform cdf
 #----------------------
@@ -270,8 +309,10 @@ plot(x = alpha[is.finite(r)], y = cumsum(r1[is.finite(r1)]),
 lines(x = alpha[is.finite(r)], y = cumsum(r2), type = "s")
 abline(v = seq(0, 1, by = 0.2), h = seq(0, 1, by = 0.2), col = "lightgrey")
 
+#construct Confidance band
+#-------------------------
 c.alpha <- sqrt(-0.5*log(0.05/2)) 
-bound <- c.alpha*sqrt(1/95+1/95)
+bound <- c.alpha*sqrt(1/100+1/100)
 low <- cumsum(r1[is.finite(r1)])-bound
 up <- cumsum(r1[is.finite(r1)])+bound
 low[low<0]=0
@@ -279,12 +320,16 @@ up[up>1]=1
 lines(x = alpha[is.finite(r)], y = low, type = "s", col = 2)
 lines(x = alpha[is.finite(r)], y = up, type = "s", col = 2)
 
+
+#difference (in distributions) vs. alpha
+#and confidence band
+#---------------------------------------
 ds <- cumsum(r1[is.finite(r1)])-cumsum(r2)
 plot(x = alpha[is.finite(r)], y = ds, cex = 0, xlab = expression(alpha),
      ylab = "distance in distribution", ylim = c(-1, 1))
 segments(x0 = alpha[is.finite(r)], y0 = ds, y1 = 0)
-lines(x = alpha[is.finite(r)], y = rep(bound, 95), type = "s", col = 2)
-lines(x = alpha[is.finite(r)], y = rep(-bound, 95), type = "s", col = 2)
+lines(x = alpha[is.finite(r)], y = rep(bound, 100), type = "s", col = 2)
+lines(x = alpha[is.finite(r)], y = rep(-bound, 100), type = "s", col = 2)
 
 #ex. if the probability of crashes given different time (weekend & weekdays)
 #    is the same, r, the ratio of % total events within an alpha/size of segments,
