@@ -1,0 +1,144 @@
+---
+title: ""
+geometry: "left=1.5cm,right=1.5cm,top=1.5cm,bottom=1.5cm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+```{r include = FALSE, cache = FALSE}
+load("~/.RData")
+```
+
+##Level set setting
+$\gamma_X(\alpha) = \underset{n}{\operatorname{sup}}\{X:\frac{\|C_X(n)\|}{N} \le \alpha\}$, where $n$ is the number of Logmile segments needed to satisfy the condition. 
+
+$C_X(n) = \{X:f_X(x) \ge f_{X_{(N-n+1)}}\}$, where $f_{X_{(N-n+1)}}$ is the $(N-n+1)^{th}$ ordered crash rate (from minimal to maximal crash rate).
+
+$f_{X_{(N-n+1)}} = \phi$, where $\phi$ is the threshold that satisfies $\frac{\|C_X(n)\|}{N} \approx \alpha$. 
+
+Suppose $\alpha = 0.20$, we can find out the threshold for weekdays is $\phi_{obs} = 0.0081$, whereas the threshold for weekend is $\phi_{pred} = 0.0112$ and the proportions of points are approximately $\alpha$ using rank respectively (as plot showed below).
+
+For instance, when $\alpha = 0.20$, we need top 6 ranks out of 34 for weekdays to have propotion of segments identified as hotspot approximately 0.2, whereas we need top 3 out of 17 for weekend. It is reasonable to use rank system instead of just number of segments needed. When segments have same ranks, they should be equally influential and included or excluded in the setting.
+
+```{r fig.height = 3.5, fig.width = 3.5, fig.show = "hold", results = "asis"}
+library(dplyr)
+alpha = 0.20
+t1 <- data.frame(lvl.set(z1, alpha))
+t2 <- data.frame(lvl.set(z2, alpha))
+
+par(family = "serif")
+plot(z1$Logmile, z1$p, xlab = "Logmile", cex = 0, ylab = "p", main = "weekday")
+segments(x0 = z1$Logmile, y0 = z1$p, y1 = 0)
+points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p)
+abline(h = t1$thres, col = "darkgray")
+text(x = 32, y = t1$thres, labels = round(t1$thres, 4), pos = 3)
+
+par(family = "serif")
+plot(z2$Logmile, z2$p, xlab = "Logmile", cex = 0, ylab = "p", main = "weekend")
+segments(x0 = z2$Logmile, y0 = z2$p, y1 = 0)
+points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p)
+abline(h = t2$thres, col = "darkgray")
+text(x = 32, y = t2$thres, labels = round(t2$thres, 4), pos = 3)
+```
+
+A sequence of $\alpha$ values is used to observe the pattern in different levels, $\alpha \in [0, 1]$ with length of interval 0.01. $Y$-axis is the cumulative proportion of crashes in hotspots and $X$-axis is level of $\alpha$. Suppose $\alpha = 0.3$, roughly 12.6% and 15.1% of crashes in weekend and weekdays respectively happened on the top 30% of Logmile segments (figure showed bottom left).
+
+A Kolmogorov-Smirnov test is performed for our surveillance plot. the statistic $D = \operatorname{max}_x|S_i(x)-S_j(x)|$, where $S_i(x)$ and $S_j(x)$ represent the cumulative distribution for $i$ and $j$ repectively. And if the maximal gap between $S_i(x)$ and $S_j(x)$, $\operatorname{max}_x|S_i(x)-S_j(x)|$, is significant, then $S_i(x)$ does not have same distribution as $S_j(x)$.
+
+For two distribution given different time period, $D = 0.0567 < D_{0.05} = 0.1911$, shows no significant difference in distributions. The maximal distance happens at $\alpha$ level 0.95, 0.96 and 0.97 (figure showed at bottom right). 
+
+```{r fig.height = 3.5, fig.width = 3.5, fig.show = "hold", results = "asis"}
+alpha <- seq(0, 1, by = 0.01)
+
+par(family = "serif")
+plot(x = z1.lvl$alpha, y = z1.lvl$pct.events, type = "s", 
+     xlab = expression(alpha), ylab = "%events in HS")
+lines(x = z2.lvl$alpha, y = z2.lvl$pct.events, type = "s", col = 4)
+abline(v = 0.3, col = "darkgrey")
+text(x = c(0.3, 0.3), 
+     y = c(z1.lvl[alpha == 0.3,]$pct.events,z2.lvl[alpha == 0.3,]$pct.events),
+     labels = round(c(z1.lvl[alpha == 0.3,]$pct.events, z2.lvl[alpha == 0.3,]$pct.events),4), 
+     pos = c(3,1), col = c(1, 4))
+
+par(family = "serif")
+plot(x = alpha, y = abs(t$d), type = "s", xlab = expression(alpha), ylab = "distance")
+abline(h = 0, col = "darkgray")
+segments(x0 = 0.96, y0 = t$max.d, y1 = 0, col = "darkgray")
+text(x = 0.96, y = t$max.d, labels = round(t$max.d, 5), pos = 3)
+```
+
+plot on the bottom left, it is plotted thresholds against true proportion of segments will be identified as hotspots. For instance, under the same threshold 0.007, top 26.47% of segments have highest ranks on crashes will be hotspots for weekdays whereas top 35.29% of segments will be hotspots for weekends. 
+
+Plot on the bottom right, it shows the percentage of matched segments during weekdays and weekend under different levels of $\alpha$. When top 10% of segments are identified as hotspots in both period, 33.33% of segments in individual period are matched. While $\alpha$ increases to 0.2, 71.43% of segments in these periods are matched.
+
+```{r fig.height = 3.5, fig.width = 3.5, fig.show = "hold", results = "asis"}
+par(family = "serif")
+plot(x = z1.lvl$thres, y = z1.lvl$level, type = "s", 
+     xlab = "threshold", ylab = "%segments id as HS", 
+     xlim = c(0, max(z1.lvl$thres, z2.lvl$thres)))
+lines(x = z2.lvl$thres, y = z2.lvl$level, type = "s", col = 4)
+abline(v = 0.007, col = "darkgrey")
+text(x = c(0.007, 0.007), y = c(z1.lvl[alpha == 0.29,]$level, z2.lvl[alpha == 0.4,]$level),
+     labels = round(c(z1.lvl[alpha == 0.29,]$level, z2.lvl[alpha == 0.4,]$level),4), 
+     col = c(1, 4), pos = 3)
+legend("topright", c("wk", "wkd"), col = c(1, 4), lty = 1)
+
+par(family = "serif")
+plot(x = alpha, y = m1, type = "s", xlab = expression(alpha), ylab = "% matches")
+abline(v = c(0.1, 0.2), col = "darkgrey")
+text(x = c(0.1, 0.2), y = m1[c(11, 21)], labels = round(m1[c(11, 21)],4), pos = 3)
+```
+
+Relative distribution of percentage of crashes on weekdays and weekend (bottom left and bottom right). If two distributions have similar crash rates across different segments, ratios of two distributions under the same $alpha$ level should be equal to 1. In here, we can perform a Kolmogorov-Smirnov test to see the magnitude of diversity by comparing relative distribution to uniform distribution. On the bottom right is the result of converting relative and uniform distributions to cumulative probability functions respectively (black represents uniform, blue represents our relative distribution and red is the confidence band for our relativef distribution).
+Either from a confidence band or KS test perspective, both results show no difference in distributions. The uniform lies within the confidence bands, and $\operatorname{max}_x|S_i(x)-S_j(x)|$, where $S_i(x)$ here stands for relative distribution and $S_j(x)$ is uniform, is $0.1137 < D_{0.05} = 0.1971$.
+
+```{r fig.height = 3.5, fig.width = 3.5, fig.show = "hold", results = "asis"}
+par(family = "serif")
+plot(x = alpha, y = r, type = "s", 
+     xlab = expression(alpha), 
+     ylab = "pct crashes (weekdays)/pct crashes (weekend)")
+abline(h = 1, col = "darkgrey")
+
+par(family = "serif")
+plot(x = alpha[is.finite(r)], y = cumsum(r1[is.finite(r1)]), 
+     type = "s", xlab = expression(alpha), ylab = "cumulative ", col = 4)
+lines(x = alpha[is.finite(r)], y = cumsum(r2), type = "s")
+abline(v = seq(0, 1, by = 0.2), h = seq(0, 1, by = 0.2), col = "lightgrey")
+
+c.alpha <- sqrt(-0.5*log(0.05/2)) 
+bound <- c.alpha*sqrt(1/95+1/95)
+low <- cumsum(r1[is.finite(r1)])-bound
+up <- cumsum(r1[is.finite(r1)])+bound
+low[low<0]=0
+up[up>1]=1
+lines(x = alpha[is.finite(r)], y = low, type = "s", col = 2)
+lines(x = alpha[is.finite(r)], y = up, type = "s", col = 2)
+```
+
+This is also a result for KS test in a different perspective. We plot distances between distributions under certain $\alpha$ values. We can expect differences should be 0 if two distributions are the same. The confidence bands are merely plus and minus confidence coefficients at significance level 0.05.
+
+```{r}
+par(family = "serif")
+ds <- cumsum(r1[is.finite(r1)])-cumsum(r2)
+plot(x = alpha[is.finite(r)], y = ds, cex = 0, xlab = expression(alpha),
+     ylab = "distance in distribution", ylim = c(-1, 1))
+segments(x0 = alpha[is.finite(r)], y0 = ds, y1 = 0)
+lines(x = alpha[is.finite(r)], y = rep(bound, 95), type = "s", col = 2)
+lines(x = alpha[is.finite(r)], y = rep(-bound, 95), type = "s", col = 2)
+```
+
+We may not need to seperate data into different time period (weekdays and weekend).
+
+try different day of week (i.e. Monday, Tuesday, and etc.), months, or different time in a day
+
+$\lambda(x)$, intensity/rate for segment $x$ represent observed data.
+
+$\hat{\lambda}(x)$, intensity/rate for segment $x$ represent predictions.
+
+ratio $r = \frac{p(x:\lambda(x)\ge\phi_\alpha)}{p(x:\hat{\lambda}(x)\ge\phi_\alpha)}$
+
+In prediction manner, if we expect our prediction is completely as same as observed data, the ratio $r$ should always be 1 in the relative distribution plot, and be straight line with slope of 1 in CDF plot. To see the devation of our prediction and data, quasi-KS and chi-squared tests are performed and shown no significance exists.
