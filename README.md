@@ -75,3 +75,21 @@
     -------------------------------------------------------------------------
     
     
+# 2017.10.18
+    all_plot_recode.R (update)
+    
+    edit function: consider time (weekend, day of week, month...)
+    edit level set setting (using rank fashion)
+    results from level set setting (update, based on rank)
+    
+    plots (weekend vs. weekdays):
+    - crash rate vs. logmile (single alpha)
+    - sequence of alpha
+        surveillance plot (level alpha vs. % events in HS)
+        proportion/size of highest segements id as HS vs. threshold
+        % segments id HS are matched for weekdays & weekend
+        relative distribution plot (compare to unif)
+        convert to uniform cdf
+ 
+    tests:  
+    - ks test for surveillance plot (not significant)
