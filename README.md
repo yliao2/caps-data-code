@@ -93,3 +93,9 @@
  
     tests:  
     - ks test for surveillance plot (not significant)
+
+
+# 2017.10.21
+    all_plot_recode.R (update)
+    - fix level set setting (solve ties problem)
+    - comments update
