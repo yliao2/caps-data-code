@@ -95,7 +95,27 @@
     - ks test for surveillance plot (not significant)
 
 
-# 2017.10.21
+# 2017.10.25
     all_plot_recode.R (update)
     - fix level set setting (solve ties problem)
     - comments update
+    dow.R (day of week)
+    - data separation for day of week
+    - use ks test to see magnitude of difference in different time
+    
+    test:
+    - ks test results for surveillance plot (sun ~ sat):
+        same:
+        mon - tue, wed, thu, fri
+        tue - wed, thu, fri
+        wed - thu, fri
+        diff: (the rest)
+        
+        may suggest weekend vs. weekdays
+        
+    - ks test results for level set setting (sun ~ sat):
+        only wed - thu has no difference in distributions
+    
+    - % matched segments (sun ~ sat), only consider top 10% segements(alpha = 0.1)
+    
+    - ks tests results for original data (month, day of week, time of day ...)
