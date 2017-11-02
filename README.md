@@ -135,3 +135,5 @@
     tod.R (time of day)
     - data separation for time of day (may be 4-hour period)
     - use ks test to see magnitude of difference in different time
+
+    setting up B-spline (unfinish)
