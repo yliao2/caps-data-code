@@ -8,13 +8,14 @@ Paper Thoughts:
 	- surveillance plots
 	- PAI, etc
 	- threshold based surveillance vs. fixed allocation based surveillance
-
+	- KS test statistic is like correlation: measure of (dis)similarity between processes
+	- Plot of \hat{p}_1(\alpha) - \hat{p_2}(\alpha) for all alpha
 2. Predictability of Crash Data
 	- Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs
 	- data:
 		- highway data
 		- crash data
-	- empirical performance measures (evaluate optimal performance - using only training data, no model)
+	- Concentration of crashes: empirical performance measures (evaluate optimal performance - using only training data, no model)
 		- vary segment
 		- vary time (e.g., full year, each month, daytime, dow, etc)
 		- show that e.g., mondays are more predictable than sundays. 
