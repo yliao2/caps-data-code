@@ -1,0 +1,31 @@
+Paper Thoughts:
+- Target Journal: https://www.journals.elsevier.com/analytic-methods-in-accident-research/
+- Title: The Predictability of {Highway/Roadway} Crash/Accident ...
+
+1. Evaluation methods
+	- description of true process: intensity and density, etc
+	- description of terms (level sets, alpha, etc)
+	- surveillance plots
+	- PAI, etc
+	- threshold based surveillance vs. fixed allocation based surveillance
+
+2. Predictability of Crash Data
+	- Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs
+	- data:
+		- highway data
+		- crash data
+	- empirical performance measures (evaluate optimal performance - using only training data, no model)
+		- vary segment
+		- vary time (e.g., full year, each month, daytime, dow, etc)
+		- show that e.g., mondays are more predictable than sundays. 
+			- in extreme: for continuous time and space, then perfectly predictable. 
+			- another extreme: worst (optimal) performance should be from using full year and large grid/segment size
+	- use type 1 to predict, use type 2 to evaluate
+		- type 1: day-time, type 2: night-time (etc, many scenarios)
+		- show performance according the the evaluation methods we defined in 1.
+		
+3. Crash Model Evaluation
+	- We may not need this for the paper, I will evaluate after first two parts are written
+	- Apply a standard model (no new methodology here)
+	- evaluate according to the methods we outlined
+	- show how close to optimal the method performs
