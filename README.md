@@ -119,3 +119,19 @@
     - % matched segments (sun ~ sat), only consider top 10% segements(alpha = 0.1)
     
     - ks tests results for original data (month, day of week, time of day ...)
+
+
+# 2017.11.2
+    all_plot_recode.R
+    
+    dow.R (day of week)
+    - data separation for day of week (may be weekdays (1~4) & weekend (5~6)
+    - use ks test to see magnitude of difference in different time
+    
+    moy.R (month of year)
+    - data separation for month of year (break & non-break)
+    - use ks test to see magnitude of difference in different time
+    
+    tod.R (time of day)
+    - data separation for time of day (may be 4-hour period)
+    - use ks test to see magnitude of difference in different time
