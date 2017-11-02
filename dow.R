@@ -6,7 +6,7 @@
 time <- "DayOfWeekUSA"
 week <- obs.rank(2015, 71, time)
 tag <- c("sun","mon","tue","wed","thu","fri","sat")
-alpha <- 0.1
+alpha <- 0.05
 
 #subset "data" into "tag" given "time" in a ranked order (implicit)
 #------------------------------------------------------------------
@@ -101,13 +101,13 @@ ggplot(data = week, mapping = aes(x = Logmile, y = p)) +
 #time <- "DayOfWeekUSA"
 #week <- obs.rank(2015, 71, time)
 #tag <- c("sun","mon","tue","wed","thu","fri","sat")
-#alpha <- 0.1
+#alpha <- 0.05
 
-out <- NULL
+out1 <- NULL
 for (var in tag)
-{out <- rbind(out, get(var))}
+{out1 <- rbind(out1, get(var))}
 
-pair.data(data = out, time = time, 
+pair.data(data = out1, time = time, 
           tag = tag, var = "p", alpha = 0.05)
 
 #ks test results for surveillance plot (sun ~ sat):
@@ -127,13 +127,13 @@ pair.data(data = out, time = time,
 #step 1: create a list of level set results given "tag"
 alpha = seq(0, 1, by = 0.01)
 lvl.set.time(tag = tag, alpha = alpha)
-out <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
+out2 <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
 
 
 #step 2: rename tag to .lvl data
 #compare every combination of .lvl data
 tag <- c("sun.lvl","mon.lvl","tue.lvl","wed.lvl","thu.lvl","fri.lvl","sat.lvl")
-pair.data(data = data.frame(out), time = "time", 
+pair.data(data = data.frame(out2), time = "time", 
           tag = tag, var = "pct.events", alpha = 0.05)
 
 #only wed - thu has no difference in distributions
@@ -166,10 +166,10 @@ pair.match <- function(tag, alpha)
 }
 #-------------------------------------------
 
-alpha <- 0.10
+alpha <- 0.05
 tag <- c("sun","mon","tue","wed","thu","fri","sat")
 lvl.set.time(tag = tag, alpha = alpha)
-out <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
+out3 <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
 pair.match(tag = tag, alpha = alpha)
 
 
