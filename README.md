@@ -141,6 +141,7 @@
 
 # 2017.11.8
     dow_detection.R (unfinished)
+    data: mon (dow)
     model: (1) b-splines
            (2) kde (default)
            (3) kde (recode)
