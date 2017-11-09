@@ -1,5 +1,5 @@
 # 2017.9.27
-    temp_rankplot20170927.R
+    temp_rankplot20170927.R (deleted)
     
     function(year, route, time(t)) 
     for store counts based on original logmile (0.019, 0.038, 0.057,...)
@@ -16,7 +16,7 @@
 
 
 # 2017.10.4
-    all_plot.R
+    all_plot.R (deleted)
     
     generate results for level set setting (function from 2017.9.27 without time(t))
     simply compare observations & predictions
@@ -47,7 +47,7 @@
     
   
 # 2017.10.11
-    all_plot.R (update)
+    all_plot.R (update) (deleted)
     
     make quasi-KS test, compare Obs. and Pred., used as an assessment
     make chi-squared test
@@ -137,3 +137,19 @@
     - use ks test to see magnitude of difference in different time
 
     setting up B-spline (unfinish)
+
+
+# 2017.11.8
+    dow_detection.R (unfinished)
+    model: (1) b-splines
+           (2) kde (default)
+           (3) kde (recode)
+    - humps detection
+    
+    draft_new.Rmd
+    descriptions for methodology (intro, ideas, why we use)
+    2. evaluation methodology
+        2.1 level sets
+        2.2 surveillance plots
+        2.3 KS tests    
+    
