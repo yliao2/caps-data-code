@@ -1,0 +1,100 @@
+---
+title: ''
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#1. Introduction
+
+
+#2. Evaluation Methodology
+<describe how we evaluate data, the method, the process under different scenarios> 
+
+###2.1 Level sets
+
+Level set methods are widely used in image segmentations and processing. One of its applciations is for pattern recognitions and shape reconstructions. Instead of continuous and multidimentional space, same implementation of level set method is used as a measure of pattern recognitions for discrete space crashes analysis in this study.
+
+Let $X$ be highway segments, $S_X$ be the support of $X$, $f(x)$ be the density of crashes at segment $X = x$, such that $\sum_{S_X} f(x) = 1$ (discrete spatial points). $\alpha$ is the top proportion of segments expected to be monitored. Then, the level set is defined as:
+
+<center> $\gamma = \{ x \in \Omega |  f(x) \ge c \}$ </center>
+
+where $\gamma$ is the set of segments that $f(x) \ge c$, $c$ is a threshold satisfying $\underset{c}{\operatorname{inf}} \frac{\| \gamma \|}{\| S_X \|} \le \alpha$ and $c$ can be determined as $\underset{x \in \gamma}{\operatorname{min}}f(x)$.
+
+The setting for level set is in a aspect of concertrating resources in ways to reduce fequencies of crashes and quick response to potential hotspots.
+
+https://link-springer-com.libdata.lib.ua.edu/book/10.1007%2F978-3-642-15352-5  
+https://link-springer-com.libdata.lib.ua.edu/book/10.1007%2F978-3-319-01712-9  
+
+###2.2 Surveillance plot
+Surveillance systems are built in respect of monitoring and capturing certain aberrations in the current or future process of tendency. These systems can be applied for detecting potential outbreak of epidemiological disease, and in essense used for evaluation of certain factors and profiles to acheive infection control in healthcare.
+
+In conjuction with level set method, surveillance plots provide visualization of screening spatiotemporal highway data from distinct perspectives of monitoring crashes along highway segments. Under limited resources, say manpower, 10% or less of highway segments with the highest crash rates may be considered high priority and regularly kept under surveillance (fixed allocation based surveillance). Also, highway segments with a target percentage of crashes can also be determined and adjusted to capture different proportion of segments under various conditions (threshold based surveillance). Considering time influence, distributions of crashes can be expected either similiar or dissimilar. To observe and build up scenarios as described above, surveillance plots are essential to extend further exploratory and predictive analysis.
+
+http://www.sciencedirect.com/science/article/pii/S187603411730206X  
+http://www.sciencedirect.com/science/article/pii/S2093791116300610  
+
+###2.3 Kolmogorov-Smirnov test
+In analog of parametric method, $Q-Q$ plots or $P-P$ plots for assessing normality use quantile and percentile statistics to compare the magnitude of deviations between estimated and hypothetical distributions. Kolmogorov-Smirnov test (KS test) is a common nonparametric method to evaluate the goodness of fit between estimated and hypothetical distribution. For two-sample KS test, two random samples are compared to observe magnitude of differences based on their distributions. The primary approach of finding estimated distribution of a random variable is empirical cumulative distribution function ($ecdf$) or empirical distribution function ($edf$). A $ecdf$ $S_n(x)$ is defined as:
+
+<center> $S_n(x) = \sum_{i=1}^{n}{\textbf{I}(x_i \le x)}/n$ </center>
+
+where $\textbf{I}(x_i \le x)$ is a indicator function that equals to 1 if $x_i \le x$, and 0 otherwise.
+
+For one-sample KS test $H_0: S_n(x) = F_X(x)$, the $D_n$ statistic is defined as:
+
+<center> $D_n = \underset{x}{\operatorname{sup}} |S_n(x) - F_X(x)|$ </center>
+
+For two-sample KS test $H_0: S_m(x) = S_n(x)$, the $D_{m,n}$ statistic is defined as:
+
+<center> $D_{m,n} = \underset{x}{\operatorname{max}} |S_m(x) - S_n(x)|$ </center>
+
+In this study, two-sample KS test is primarily conducted as a measure of association between distributions in analog of Least Significant Difference (LSD) for multiple comparisons in parametric methods. This test is contructed based on the snenarios used from a surveillance perspective whereas the surveillance is constructed based on the level set method; therefore, three ways of evaluations of highway data under different scenarios are seemingly distinct but closely tied together to organize a broaden perspecive of highway data structures.
+
+Jean D. Gibbons, Subhabrata Chakraborti - Nonparametric Statistical Inference 4e (2003)
+
+
+	- PAI, etc
+	- Plot of \hat{p}_1(\alpha) - \hat{p_2}(\alpha) for all alpha
+
+#3. Data
+###Data description
+To illustrate the application of the random thresholds random parameters hierarchical ordered probit modeling approach,
+a single-vehicle accident injury-severity analysis is conducted using 6127 police-reported crashes from urban and rural highways
+in the State of Washington. The data were collected over a three-year-period, between 2011 and 2013, and include
+roadway characteristics (roadway geometrics, functional class, cross-section features, and number of lanes), traffic characteristics
+(annual average daily traffic, truck traffic, traffic composition, speed limits, and traffic control type), and accidentrelated
+characteristics (injury severity, total number of injuries, location and date of the accident, and information about previous
+accidents). The data also include vehicle- (type, make and model, age, condition, ownership, airbag type, stolen vehicle,
+purpose of use, and registration information), driver- (age, gender, driving license information, and driver¡¦s sobriety), and
+collision-specific information (type of collision, vehicle action, pedestrian or motorcycle involvement, airbag deployment,
+environmental and lighting conditions, and after-crash vehicle condition information). For a detailed data description see
+Fountas et al. (2017).
+The data were jointly obtained from the SHRP2 Roadway Information Database (RID) and the Highway Safety Information
+System (HSIS). In an effort to acquire detailed and disaggregate information, the two datasets were linked on the basis of
+homogeneous roadway segmentation ¡V in terms of roadway geometrics (lane, median, and shoulder characteristics), traffic
+characteristics (traffic volume and composition), and in reference to the crash occurrence location.
+The injury-severity outcomes were observed in four injury-severity levels: (i) no injury (including property-damage-only
+and possible injury); (ii) injury; (iii) serious injury; and (iv) fatality. In this context, only two thresholds can be estimated
+(equal to j - 2, where j is the total number of ordered outcomes). It should be noted that the resulting injury-severity level
+
+#4. Predictability
+
+
+
+
+
+	- Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs
+	- data:
+		- highway data
+		- crash data
+	- Concentration of crashes: empirical performance measures (evaluate optimal performance - using only training data, no model)
+		- vary segment
+		- vary time (e.g., full year, each month, daytime, dow, etc)
+		- show that e.g., mondays are more predictable than sundays. 
+			- in extreme: for continuous time and space, then perfectly predictable. 
+			- another extreme: worst (optimal) performance should be from using full year and large grid/segment size
+	- use type 1 to predict, use type 2 to evaluate
+		- type 1: day-time, type 2: night-time (etc, many scenarios)
+		- show performance according the the evaluation methods we defined in 1.
