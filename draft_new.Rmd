@@ -3,8 +3,8 @@ title: ''
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 #1. Introduction
 
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #2. Evaluation Methodology
 <describe how we evaluate data, the method, the process under different scenarios> 
 
-###2.1 Level sets
+##2.1 Level sets
 
 Level set methods are widely used in image segmentations and processing. One of its applciations is for pattern recognitions and shape reconstructions. Instead of continuous and multidimentional space, same implementation of level set method is used as a measure of pattern recognitions for discrete space crashes analysis in this study.
 
@@ -20,23 +20,130 @@ Let $X$ be highway segments, $S_X$ be the support of $X$, $f(x)$ be the density 
 
 <center> $\gamma = \{ x \in \Omega |  f(x) \ge c \}$ </center>
 
-where $\gamma$ is the set of segments that $f(x) \ge c$, $c$ is a threshold satisfying $\underset{c}{\operatorname{inf}} \frac{\| \gamma \|}{\| S_X \|} \le \alpha$ and $c$ can be determined as $\underset{x \in \gamma}{\operatorname{min}}f(x)$.
+where $\gamma$ is the set of segments $x$'s that $f(x) \ge c$, $c$ is a threshold satisfying $\underset{c}{\operatorname{inf}} \frac{\| \gamma \|}{\| S_X \|} \le \alpha$ and $c$ can be determined as $\underset{x \in \gamma}{\operatorname{min}}f(x)$.
 
-The setting for level set is in a aspect of concertrating resources in ways to reduce fequencies of crashes and quick response to potential hotspots.
+Some drawbacks of using level set methods in discrete space data are such as approximation of desired levels and solution to the ties with the same rates. Considering these two main issues in this study, level $\hat{\alpha}$ of sample is contraint on the proportion of highway segments that is closer to desired $\alpha$ but not greater than $\alpha$. Since same ranks represent that crashes are equally likely to happen to these tied segments, ties should be all inclusive or exclusive in our desired set as the level changes. These two issues are under control with two general approaches mentioned previously. The figure showed below demonstrates a comparison of crashes given different time periods under a level set method with $\alpha =$ 0.05 using highway data from Route 71, 2015. X-axis is the location ($x$ = Logmile) on this route whereas y-axis represents proportion of crashes $f(x)$. Threshold, $c$, (grey line) is set to be the minimal crash rate in the desired set $\gamma$. The true $\alpha$ levels for weekdays and weekend data are 0.0481 and 0.0377 with thresholds 0.0032 and 0.0039 repectively. 88 highway segments out of 1729 (or with a proportion of 0.0481) on route 71 with a crash rate equal or greater than 0.0032 approximately meets the desired level $\alpha =$ 0.05 for weekdays; similarily, 69 out of total 1729 segments on route 71 with a threshold equal or over 0.0039 satisfies this scenario. 
+This setting is in a aspect of concertrating resources, say 0.05 in this example, and focusing on few highway segments with higher chance of having crashes with efficiency. 
+
+<center>
+```{r}
+load("~/all_plot.RData")
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
+    mfrow = c(1, 2), oma = c(2, 0, 0, 0))
+
+plot.new()
+plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0,max(z$p)))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+segments(x0 = z1$Logmile, y0 = z1$p, y1 = 0)
+points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p, cex = 0.8)
+abline(h = t1$thres, col = "darkgray")
+box(which = "plot")
+text(x = 32, y = t1$thres, labels = round(t1$thres, 4), pos = 3)
+mtext("(a)", side = 1, line = 2, adj = 0.5)
+
+
+plot.new()
+plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0,max(z$p)))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+segments(x0 = z2$Logmile, y0 = z2$p, y1 = 0)
+points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p, cex = 0.8)
+abline(h = t2$thres, col = "darkgray")
+box(which = "plot")
+text(x = 32, y = t2$thres, labels = round(t2$thres, 4), pos = 3)
+mtext("(b)", side = 1, line = 2, adj = 0.5)
+
+fig.des <- expression(paste("Figure 1: weekdays (a) and weekend (b) with ", alpha, " = 0.05", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+```
+</center>
 
 https://link-springer-com.libdata.lib.ua.edu/book/10.1007%2F978-3-642-15352-5  
 https://link-springer-com.libdata.lib.ua.edu/book/10.1007%2F978-3-319-01712-9  
 
-###2.2 Surveillance plot
+##2.2 Surveillance plots
 Surveillance systems are built in respect of monitoring and capturing certain aberrations in the current or future process of tendency. These systems can be applied for detecting potential outbreak of epidemiological disease, and in essense used for evaluation of certain factors and profiles to acheive infection control in healthcare.
 
 In conjuction with level set method, surveillance plots provide visualization of screening spatiotemporal highway data from distinct perspectives of monitoring crashes along highway segments. Under limited resources, say manpower, 10% or less of highway segments with the highest crash rates may be considered high priority and regularly kept under surveillance (fixed allocation based surveillance). Also, highway segments with a target percentage of crashes can also be determined and adjusted to capture different proportion of segments under various conditions (threshold based surveillance). Considering time influence, distributions of crashes can be expected either similiar or dissimilar. To observe and build up scenarios as described above, surveillance plots are essential to extend further exploratory and predictive analysis.
 
 http://www.sciencedirect.com/science/article/pii/S187603411730206X  
-http://www.sciencedirect.com/science/article/pii/S2093791116300610  
+http://www.sciencedirect.com/science/article/pii/S2093791116300610
 
-###2.3 Kolmogorov-Smirnov test
-In analog of parametric method, $Q-Q$ plots or $P-P$ plots for assessing normality use quantile and percentile statistics to compare the magnitude of deviations between estimated and hypothetical distributions. Kolmogorov-Smirnov test (KS test) is a common nonparametric method to evaluate the goodness of fit between estimated and hypothetical distribution. For two-sample KS test, two random samples are compared to observe magnitude of differences based on their distributions. The primary approach of finding estimated distribution of a random variable is empirical cumulative distribution function ($ecdf$) or empirical distribution function ($edf$). A $ecdf$ $S_n(x)$ is defined as:
+###2.2.1 Fixed allocation based surveillance
+The following is an example of fixed allocation based surveillance plots in two distinct way of presenting. Same data used for Figure 1 is also implemented in this example. Instead of single $\alpha$ level is observed in Figure 1, a sequence of $\alpha$ levels (from 0 to 1 with a increment of 0.01) are now concerned and showed in Figure 2. For (a) and (b), y-axis represents a cumulative proportion of crashes, and x-axis individually represents cumulative ordered segments size and top proportion of segments expected to be monitored, which is $\alpha$. The following paragraphs will describe this figures in detail.
+
+<center>
+```{r}
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
+    mfrow = c(1, 2), oma = c(2, 0, 0, 0))
+
+plot.new()
+plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = cumsum(z3$log.size), y = cumsum(z3$log.rate), type = "s")
+lines(x = cumsum(z4$log.size), y = cumsum(z4$log.rate), type = "s", col = 4)
+abline(v = h, col = "darkgrey")
+box(which = "plot")
+text(x = h, y = c(p1, p2, 0), labels = round(c(p1, p2, h), 4), pos = 2, col = c(1, 4, 1))
+mtext("(a)", side = 1, line = 2, adj = 0.5)
+legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
+
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = z1.lvl$alpha, y = z1.lvl$pct.events, type = "s")
+lines(x = z2.lvl$alpha, y = z2.lvl$pct.events, type = "s", col = 4)
+abline(v = 0.18, col = "darkgrey")
+box(which = "plot")
+text(x = thres, y = c(p3, p4, 0), labels = round(c(p3, p4, thres),4), pos = 2, col = c(1, 4, 1))
+mtext("(b)", side = 1, line = 2, adj = 0.5)
+legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
+
+fig.des <- expression(paste("Figure 2: surveillance plots for weekdays and weekend under distinct perspectives", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+```
+</center>
+
+Table 1 is obtained with arrangement by order and shows the composition for Figure 2 (a). *diff* is the difference between each segments; *rank* is ranked by proportion of crashes in individual segments; *p* is proportion of crashes in individual segments; *Log.size* and *log.rate* are the sum of *diff* and *p* with the same ranked segments respectively (e.g. in *rank* = 7, 4 segments are tied, therefore with a *log.size* = *diff* $\times$ 4 = 0.0078 and *log.rate* = *p* $\times$ 4 = 0.0145, since the *diff* is all equal on route 71). It is plotted cumulative segmental differences versus cumulative proportion of crashes in ordered segments, and readible to see the surveillance under different desired lengths of highway.
+
+Figure 2 (b), in analog of Figure 1 (a), will be showed simultaneously in the parentheses. The grey vertical line is the desired length of highway, top 6.26 *logmile* (or $\alpha =$ 0.18) being under surveillance. Under this scenario, 82.26% and 86.92% of total crashes will be primarily on top 6.26 *logmile* (or top 18% of total segments) for weekdays and weekend respectively.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+knitr::kable(head(z3, 10), caption = "Table 1: Partial output for Figure 2 (a)")
+```
+
+###2.2.2 Threshold based surveillance
+Figure 3 shows an example of threshold based surveillance plot for weekdays and weekend. Y-axis is the proportion of segments above a given threshold whereas x-axis is desired threshold, which is the crash rate on a segment. Grey line is set to be a desired threshold 0.0019. 9.62% and 10.99% (or 176 and 201 segments) of total segments of their crash rates will be above a desired threshold of 0.0019 repectively. In comparison with fixed allocation based surveillance, it is also flexible to set up a desired threshold *c* instead of a desired proportion of segments $\alpha$ to be monitored.
+
+Unlike the implementation of fixed allocation based surveillance, threshold based surveillance is directly built from raw data instead of ranking data first. Under a set of threshold based surveillance segments, this is a problem of giving priority to individual segment since no distinction shows beyond the entire set. Both systems have their own disadvantages and advantages; simultaneously using two systems provides an improved aspect of measuring the quality of data to set up a comparatively optimal cut-off point for surveillance.
+
+<center>
+```{r}
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
+
+plot.new()
+plot.window(xlim = rev(c(0, max(thr))), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = thr, y = z1.thres$size, type = "s")
+lines(x = thr, y = z2.thres$size, type = "s", col = 4)
+v <- 0.0019
+abline(v = v, col = "darkgrey")
+box(which = "plot")
+p5 <- z1.thres[which(z1.thres$thr==v),]$size
+p6 <- z2.thres[which(z2.thres$thr==v),]$size
+text(x = v, y = c(p5+0.01, p6+0.04, 0), labels = round(c(p5, p6, v), 4), pos = 2, col = c(1, 4, 1))
+legend("topleft", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
+mtext("Figure 3: threshold based surveillance for weekdays and weekend", 
+      side = 1, adj = 0.5, outer = TRUE)
+```
+</center>
+
+##2.3 Kolmogorov-Smirnov test
+In analog of parametric method, *Q-Q* plots or *P-P* plots for assessing normality use quantile and percentile statistics to compare the magnitude of deviations between estimated and hypothetical distributions. Kolmogorov-Smirnov test (KS test) is a common nonparametric method to evaluate the goodness of fit between estimated and hypothetical distribution. For two-sample KS test, two random samples are compared to observe magnitude of differences based on their distributions. The primary approach of finding estimated distribution of a random variable is empirical cumulative distribution function (*ecdf*) or empirical distribution function (*edf*). An *ecdf* $S_n(x)$ is defined as:
 
 <center> $S_n(x) = \sum_{i=1}^{n}{\textbf{I}(x_i \le x)}/n$ </center>
 
@@ -50,46 +157,60 @@ For two-sample KS test $H_0: S_m(x) = S_n(x)$, the $D_{m,n}$ statistic is define
 
 <center> $D_{m,n} = \underset{x}{\operatorname{max}} |S_m(x) - S_n(x)|$ </center>
 
+If $D_{m,n} \ge d_0$, where $d_0 = c_{\alpha} \sqrt{\frac{1}{m} + \frac{1}{n}}$, $c_{\alpha}$ values can be found in any nonparametric materials, then $H_0$ is rejected, which implies $S_m(x)$ and $S_n(x)$ are from different distributions. Note that as $n, m \rightarrow \infty$, $c_{\alpha}$ is approximately $\sqrt{-\frac{1}{2} \operatorname{ln} (\frac{\alpha}{2})}$. Approximation of limiting $c_{\alpha}$ will be used for measure of distribution.
+
 In this study, two-sample KS test is primarily conducted as a measure of association between distributions in analog of Least Significant Difference (LSD) for multiple comparisons in parametric methods. This test is contructed based on the snenarios used from a surveillance perspective whereas the surveillance is constructed based on the level set method; therefore, three ways of evaluations of highway data under different scenarios are seemingly distinct but closely tied together to organize a broaden perspecive of highway data structures.
 
 Jean D. Gibbons, Subhabrata Chakraborti - Nonparametric Statistical Inference 4e (2003)
 
+###2.3.1 Demonstration of conducting KS test
+Recall from 2.2, surveillance using level set is comparing the proportion of crashes under various $\alpha$ values. Continuing using the same data as examples showed earlier, $S_m(x)$ and $S_n(x)$ are *cdf*'s for weekdays and weekend with same number of $\alpha$ values (*m* = *n* = 101) using level set method repectively. Aussume significance level is 0.05, then, $D_{m,n} =$ 0.085 ($d_0 \approx$ 0.1911) with *p-value* 0.96, and therefore, $H_0: S_m(x) = S_n(x)$ is rejected. This is suggested that two distributions are indistinguishable. It is possible that model based on weekdays might have similar predictability with model based on weekend. Instead of two, one model might be sufficient for prediction and surveillance. 
 
-	- PAI, etc
-	- Plot of \hat{p}_1(\alpha) - \hat{p_2}(\alpha) for all alpha
+The purpose of conducting a KS test on a fixed allocation based surveillance is that patterns of the top desired percentage of total segments for compared distributions are intrigued instead of the entire original highway patterns. In ordered segments, unnecessary segments can be easily discarded (beyond a $\alpha$ level), and the desired set (within $\alpha$ level) can be used to construct merely one model to predict weekdays and weekend patterns with better performance and precision. Using this procedure, model complexity and performance can both be ideally achieved.
 
-#3. Data
-###Data description
-To illustrate the application of the random thresholds random parameters hierarchical ordered probit modeling approach,
-a single-vehicle accident injury-severity analysis is conducted using 6127 police-reported crashes from urban and rural highways
-in the State of Washington. The data were collected over a three-year-period, between 2011 and 2013, and include
-roadway characteristics (roadway geometrics, functional class, cross-section features, and number of lanes), traffic characteristics
-(annual average daily traffic, truck traffic, traffic composition, speed limits, and traffic control type), and accidentrelated
-characteristics (injury severity, total number of injuries, location and date of the accident, and information about previous
-accidents). The data also include vehicle- (type, make and model, age, condition, ownership, airbag type, stolen vehicle,
-purpose of use, and registration information), driver- (age, gender, driving license information, and driver¡¦s sobriety), and
-collision-specific information (type of collision, vehicle action, pedestrian or motorcycle involvement, airbag deployment,
-environmental and lighting conditions, and after-crash vehicle condition information). For a detailed data description see
-Fountas et al. (2017).
-The data were jointly obtained from the SHRP2 Roadway Information Database (RID) and the Highway Safety Information
-System (HSIS). In an effort to acquire detailed and disaggregate information, the two datasets were linked on the basis of
-homogeneous roadway segmentation ¡V in terms of roadway geometrics (lane, median, and shoulder characteristics), traffic
-characteristics (traffic volume and composition), and in reference to the crash occurrence location.
-The injury-severity outcomes were observed in four injury-severity levels: (i) no injury (including property-damage-only
-and possible injury); (ii) injury; (iii) serious injury; and (iv) fatality. In this context, only two thresholds can be estimated
-(equal to j - 2, where j is the total number of ordered outcomes). It should be noted that the resulting injury-severity level
+##2.4 Jaccard Index plot
+The Jaccard Index, or Jaccard similarity coefficient was introduced by Paul Jaccard and use as a measure of similarity of data. The Jaccard Index can be also extended to a Jaccard distance for measure of similarity in multidimensional space. General intersection-uion relationship will be applied in this paper. Suppose two samples are drawn, it is defined as a fraction of intersection and union sets of two samples.
 
-#4. Predictability
+<center> $J(A, B) = \frac{\| A \cap B \|}{\| A \cup B \|}$, where $A$ and $B$ represent two samples, $\|  \cdot \|$ is the size of a sample. </center>  
+
+Jaccard, Paul (1912), The distribution of the flora in the alpine zone
+
+In accordance with level set method, Jaccard Index can be calculated under a sequence of $\alpha$ levels and the Jaccard Index plot is showed below in Figure 4. Grey lines are at $\alpha$ level 0.1 and 0.2, with percentages of matched segments 47.93% and 59.03% respectively for the Jaccard Index of weekdays and weekend sets. Note that percentage of matched rate stays constant starts from roughly $\alpha$ = 0.37, this is caused by no crash records within the rest of highway segments. 
+
+<center>
+```{r}
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1), ylab = "% matched segments")
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = alpha, y = m1, type = "s")
+v1 <- c(0.1, 0.2)
+abline(v = v1, col = "darkgrey")
+box(which = "plot")
+text(x = v1, y = m1[v1*length(alpha)+1]+0.02, 
+     labels = round(m1[v1*length(alpha)+1], 4), pos = 2)
+mtext("Figure 4: Jaccard Index for weekdays and weekend sets", 
+      side = 1, adj = 0.5, outer = TRUE)
+```
+</center>
+
+<PAI, etc>
+
+#3. Predictability of Crash Data
+In this section, tools mentioned in section 2 will be implemented as a surveillance process of quality of data. Process will follow 
+<Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs>
+
+##3.1 Data sources
+The dataset used is composed of two subsets: *Highway* data and *Crash* data, and focus on the state of Arkansas region. *Highway* data recorded the highway surface characteristics across the entire highway system in Arkansas. Categories and variables such as location  (logmile, longitude, latitude), traffic characteristics (average daily traffic), surface characteristics (type of road, sign of route, type of operation, median type and number of lanes) and others are included in this set. *Crash* data recorded individual crash cases at the spot. It includes time features (crash date, crash time), location (latitude, longitude, city, county, street), highway features (class of property, classification of trafficway, road system, intersection, junction relation), environmental features (light condition, road way surface condition) and crash conditions (interaction type, crash manner, number of fatals, number of injuries, number of vehicles) and others are included in this set.
+
+The data used in this paper is obtained from The Center for Advanced Public Safety (CAPS) at The University of Alabama. CAPS also cooperates with centers in other universities to work on various projects in different areas such as traffic safety and engineering and analytics, and has access to these numerous valuable data sources such as highway and crash data in different time and areas. This benefits this paper to conduct thorough analyses.
+
+##3.2 Concentration of crashes: empirical performance measures
 
 
 
-
-
-	- Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs
-	- data:
-		- highway data
-		- crash data
-	- Concentration of crashes: empirical performance measures (evaluate optimal performance - using only training data, no model)
+- Concentration of crashes: empirical performance measures (evaluate optimal performance - using only training data, no model)
 		- vary segment
 		- vary time (e.g., full year, each month, daytime, dow, etc)
 		- show that e.g., mondays are more predictable than sundays. 
