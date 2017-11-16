@@ -82,12 +82,6 @@ obs2ref <- function(year, route, time)
   return(z)
 }
 
-#mod = LOESS
-pred.mod <- function(x, y, data)
-{
-  loess(y~x, data = data)
-}
-
 #ks test fn
 ks.results <- function(s1, s2, alpha)
 {
@@ -97,10 +91,10 @@ ks.results <- function(s1, s2, alpha)
   d <- s1-s2
   max.d <- max(abs(s1-s2))
   p <- min(2*exp(-2*max.d^2/(1/n+1/m)), 1)
-  if (max.d>=bound){out = paste("Reject H0. max(|s1-s2|) = ", round(max.d, 4), " >= ", 
-                                round(bound, 4), " at sig. level = ", alpha, sep = "")}
-  else {out = paste("Fail to reject H0. max(|s1-s2|) = ", round(max.d, 4), " < ", 
-                    round(bound, 4), " at sig. level = ", alpha, sep = "")}
+  if (max.d>=bound){out = paste("Reject H0. D.max = ", round(max.d, 4), " >= ", 
+                                round(bound, 4), " sig. level = ", alpha, sep = "")}
+  else {out = paste("Fail to reject H0. D.max = ", round(max.d, 4), " < ", 
+                    round(bound, 4), " sig. level = ", alpha, sep = "")}
   list(out = out, max.d = max.d, p.value = p, bound = bound, d = d)
 }
 
@@ -152,35 +146,51 @@ lvl.set <- function(data, alpha)
       }
     }
     else{out[i, 2] <- 0; out[i, 3] <- 0; out[i, 4] <- 0; 
-    out[i, 5] <- max(z1$p)}
+    out[i, 5] <- max(data$p)}
   }
   colnames(out) <- c("alpha","level", "nseg", "pct.events", "thres")
   return(out)
 }
 
-#single alpha = 0.20
+#single alpha = 0.05
 #-------------------
-alpha = 0.20
+alpha = 0.05
 t1 <- data.frame(lvl.set(z1, alpha))
 t2 <- data.frame(lvl.set(z2, alpha))
 
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
+    mfrow = c(1, 2), oma = c(2, 0, 0, 0))
 
-plot(z1$Logmile, z1$p, xlab = "Logmile", cex = 0, ylab = "p", main = "weekday")
+plot.new()
+plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, max(z$p)))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
 segments(x0 = z1$Logmile, y0 = z1$p, y1 = 0)
-points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p)
+points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p, cex = 0.8)
 abline(h = t1$thres, col = "darkgray")
+box(which = "plot")
 text(x = 32, y = t1$thres, labels = round(t1$thres, 4), pos = 3)
+mtext("(a)", side = 1, line = 2, adj = 0.5)
 
 
-plot(z2$Logmile, z2$p, xlab = "Logmile", cex = 0, ylab = "p", main = "weekend")
+plot.new()
+plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, max(z$p)))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
 segments(x0 = z2$Logmile, y0 = z2$p, y1 = 0)
-points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p)
+points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p, cex = 0.8)
 abline(h = t2$thres, col = "darkgray")
+box(which = "plot")
 text(x = 32, y = t2$thres, labels = round(t2$thres, 4), pos = 3)
+mtext("(b)", side = 1, line = 2, adj = 0.5)
 
+fig.des <- expression(paste("figure: weekdays (a) and weekend (b) with ", alpha, " = 0.05", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
 
-#sequence of alphas (alpha = seq(0, 1, length = 11))
-#====================================================
+#sequence of alphas (alpha = seq(0, 1, length = 101))
+#==========================================================
+#----------fix allocation based surveillance--------------#
+#----------------------------------------------------------
 #surveillance plot (type 1) (size of distance vs. % events)
 #----------------------------------------------------------
 z3 <- z1 %>% select(diff, rank, p) %>% group_by(rank) %>% 
@@ -192,6 +202,12 @@ plot(x = cumsum(z3$log.size), y = cumsum(z3$log.rate), type = "s",
      xlab = "size of distance", ylab = "%crashes")
 lines(x = cumsum(z4$log.size), y = cumsum(z4$log.rate), type = "s", col = 4)
 
+h <- 0.18*sum(z3$log.size)
+abline(v = h, col = "darkgrey")
+
+p1 <- max(cumsum(z3[which(cumsum(z3$log.size)<=h),]$log.rate))
+p2 <- max(cumsum(z4[which(cumsum(z4$log.size)<=h),]$log.rate))
+text(x = c(h, h), y = c(p1, p2), labels = round(c(p1, p2),4), pos = 2, col = c(1, 4))
 
 #surveillance plot (type 2) (level alpha vs. % events in HS)
 #--------------------------------------------------
@@ -199,15 +215,88 @@ alpha <- seq(0, 1, by = 0.01)
 z1.lvl <- data.frame(lvl.set(z1, alpha))
 z2.lvl <- data.frame(lvl.set(z2, alpha))
 
+thres <- 0.18
+
 plot(x = z1.lvl$alpha, y = z1.lvl$pct.events, type = "s", 
      xlab = expression(alpha), ylab = "%events in HS")
 lines(x = z2.lvl$alpha, y = z2.lvl$pct.events, type = "s", col = 4)
-abline(v = 0.3, col = "darkgrey")
-text(x = c(0.3, 0.3), 
-     y = c(z1.lvl[alpha == 0.3,]$pct.events,z2.lvl[alpha == 0.3,]$pct.events),
-     labels = round(c(z1.lvl[alpha == 0.3,]$pct.events, z2.lvl[alpha == 0.3,]$pct.events),4), 
+abline(v = thres, col = "darkgrey")
+p3 <- z1.lvl[alpha == thres,]$pct.events
+p4 <- z2.lvl[alpha == thres,]$pct.events
+text(x = c(thres, thres), y = c(p3, p4), labels = round(c(p3, p4),4), 
      pos = 3, col = c(1, 4))
 legend("bottomright", c("wk", "wkd"), col = c(1, 4), lty = 1)
+
+
+#--------------------------
+#markdown figure format use
+#--------------------------
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
+    mfrow = c(1, 2), oma = c(2, 0, 0, 0))
+
+plot.new()
+plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = cumsum(z3$log.size), y = cumsum(z3$log.rate), type = "s")
+lines(x = cumsum(z4$log.size), y = cumsum(z4$log.rate), type = "s", col = 4)
+abline(v = h, col = "darkgrey")
+box(which = "plot")
+text(x = h, y = c(p1, p2, 0), labels = round(c(p1, p2, h), 4), pos = 2, col = c(1, 4, 1))
+mtext("(a)", side = 1, line = 2, adj = 0.5)
+legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
+
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = z1.lvl$alpha, y = z1.lvl$pct.events, type = "s")
+lines(x = z2.lvl$alpha, y = z2.lvl$pct.events, type = "s", col = 4)
+abline(v = 0.18, col = "darkgrey")
+box(which = "plot")
+text(x = thres, y = c(p3, p4, 0), labels = round(c(p3, p4, thres),4), pos = 2, col = c(1, 4, 1))
+mtext("(b)", side = 1, line = 2, adj = 0.5)
+legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
+
+fig.des <- expression(paste("figure: surveillance plots for weekdays and weekend with a sequence of ", alpha, " levels", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+
+
+#-------------threshold based surveillance----------------#
+#----------------------------------------------------------
+u <- unique(z$p)
+thr <- seq(0, round(max(u)+0.005, 2), by = 0.0001)
+
+thres.out <- function(data, var, thr)
+{
+  d <- data
+  n <- nrow(d)
+  v <- var
+  o <- d[v]
+  out <- NULL
+  for (i in 1:length(thr)) {out <- c(out, sum(o>=thr[i]))}
+  return(data.frame(thr, nseg = out, size = out/n))
+}
+
+z1.thres <- thres.out(data = z1, var = "p", thr = thr)
+z2.thres <- thres.out(data = z2, var = "p", thr = thr)
+
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
+
+plot.new()
+plot.window(xlim = rev(c(0, max(thr))), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = thr, y = z1.thres$size, type = "s")
+lines(x = thr, y = z2.thres$size, type = "s", col = 4)
+v <- 0.0019
+abline(v = v, col = "darkgrey")
+box(which = "plot")
+p5 <- z1.thres[which(z1.thres$thr==v),]$size
+p6 <- z2.thres[which(z2.thres$thr==v),]$size
+text(x = v, y = c(p5+0.01, p6+0.04, 0), labels = round(c(p5, p6, v), 4), pos = 2, col = c(1, 4, 1))
+legend("topleft", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
+
 
 
 #ks test for surveillance plot (not significant)
@@ -273,9 +362,23 @@ m1 <- NULL
   
   m1 <- c(m1, sum(cond)/max)
 }
-plot(x = alpha, y = m1, type = "s", xlab = expression(alpha), ylab = "% matches")
+
+
+plot(x = alpha, y = m1, type = "s", xlab = expression(alpha), ylab = "% matched segments")
 abline(v = c(0.1, 0.2), col = "darkgrey")
 text(x = c(0.1, 0.2), y = m1[c(11, 21)], labels = round(m1[c(11, 21)],4), pos = 3)
+
+par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1), ylab = "% matched segments")
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2)
+lines(x = alpha, y = m1, type = "s")
+v1 <- c(0.1, 0.2)
+abline(v = v1, col = "darkgrey")
+box(which = "plot")
+text(x = v1, y = m1[v1*length(alpha)+1], 
+     labels = round(m1[v1*length(alpha)+1],4), pos = 3)
 
 #ex. under the same alpha/size/(%segments id HS) = 0.1, 47.93% of segments
 #    for weekdays and weekend are matched. if alpha = 0.2, 59.03% of segments

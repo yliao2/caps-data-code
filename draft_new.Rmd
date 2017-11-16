@@ -1,13 +1,16 @@
 ---
-title: ''
+title: 'Predictability of Crash Modelling From the Data with Improved Quality Using Level Sets Surveillance System'
 output: html_document
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
-#1. Introduction
 
+#Abstract
+
+#1. Introduction
+<build up scenario for problems, and summarize contents of section 2 and 3>
 
 #2. Evaluation Methodology
 <describe how we evaluate data, the method, the process under different scenarios> 
@@ -22,7 +25,7 @@ Let $X$ be highway segments, $S_X$ be the support of $X$, $f(x)$ be the density 
 
 where $\gamma$ is the set of segments $x$'s that $f(x) \ge c$, $c$ is a threshold satisfying $\underset{c}{\operatorname{inf}} \frac{\| \gamma \|}{\| S_X \|} \le \alpha$ and $c$ can be determined as $\underset{x \in \gamma}{\operatorname{min}}f(x)$.
 
-Some drawbacks of using level set methods in discrete space data are such as approximation of desired levels and solution to the ties with the same rates. Considering these two main issues in this study, level $\hat{\alpha}$ of sample is contraint on the proportion of highway segments that is closer to desired $\alpha$ but not greater than $\alpha$. Since same ranks represent that crashes are equally likely to happen to these tied segments, ties should be all inclusive or exclusive in our desired set as the level changes. These two issues are under control with two general approaches mentioned previously. The figure showed below demonstrates a comparison of crashes given different time periods under a level set method with $\alpha =$ 0.05 using highway data from Route 71, 2015. X-axis is the location ($x$ = Logmile) on this route whereas y-axis represents proportion of crashes $f(x)$. Threshold, $c$, (grey line) is set to be the minimal crash rate in the desired set $\gamma$. The true $\alpha$ levels for weekdays and weekend data are 0.0481 and 0.0377 with thresholds 0.0032 and 0.0039 repectively. 88 highway segments out of 1729 (or with a proportion of 0.0481) on route 71 with a crash rate equal or greater than 0.0032 approximately meets the desired level $\alpha =$ 0.05 for weekdays; similarily, 69 out of total 1729 segments on route 71 with a threshold equal or over 0.0039 satisfies this scenario. 
+Some drawbacks of using level set methods in discrete space data are such as approximation of desired levels and solution to the ties with the same rates. Considering these two main issues in this study, level $\hat{\alpha}$ of sample is contraint on the proportion of highway segments that is closer to desired $\alpha$ but not greater than $\alpha$. Since same ranks represent that crashes are equally likely to happen to these tied segments, ties should be all inclusive or exclusive in our desired set as the level changes. These two issues are under control with two general approaches mentioned previously. Figure 2.1 showed below demonstrates a comparison of crashes given different time periods under a level set method with $\alpha =$ 0.05 using highway data from Route 71, 2015. X-axis is the location ($x$ = Logmile) on this route whereas y-axis represents proportion of crashes $f(x)$. Threshold, $c$, (grey line) is set to be the minimal crash rate in the desired set $\gamma$. The true $\alpha$ levels for weekdays and weekend data are 0.0481 and 0.0377 with thresholds 0.0032 and 0.0039 repectively. 88 highway segments out of 1729 (or with a proportion of 0.0481) on route 71 with a crash rate equal or greater than 0.0032 approximately meets the desired level $\alpha =$ 0.05 for weekdays; similarily, 69 out of total 1729 segments on route 71 with a threshold equal or over 0.0039 satisfies this scenario. 
 This setting is in a aspect of concertrating resources, say 0.05 in this example, and focusing on few highway segments with higher chance of having crashes with efficiency. 
 
 <center>
@@ -33,7 +36,7 @@ par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
 
 plot.new()
 plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0,max(z$p)))
-grid(nx = NULL, ny = NULL, col = "lightgray")
+grid(nx = NULL, ny = NULL, col = "gray")
 axis(1);axis(2)
 segments(x0 = z1$Logmile, y0 = z1$p, y1 = 0)
 points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p, cex = 0.8)
@@ -45,7 +48,7 @@ mtext("(a)", side = 1, line = 2, adj = 0.5)
 
 plot.new()
 plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0,max(z$p)))
-grid(nx = NULL, ny = NULL, col = "lightgray")
+grid(nx = NULL, ny = NULL, col = "gray")
 axis(1);axis(2)
 segments(x0 = z2$Logmile, y0 = z2$p, y1 = 0)
 points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p, cex = 0.8)
@@ -54,7 +57,7 @@ box(which = "plot")
 text(x = 32, y = t2$thres, labels = round(t2$thres, 4), pos = 3)
 mtext("(b)", side = 1, line = 2, adj = 0.5)
 
-fig.des <- expression(paste("Figure 1: weekdays (a) and weekend (b) with ", alpha, " = 0.05", sep = ""))
+fig.des <- expression(paste("Figure 2.1: weekdays (a) and weekend (b) with ", alpha, " = 0.05", sep = ""))
 mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
 ```
 </center>
@@ -71,7 +74,7 @@ http://www.sciencedirect.com/science/article/pii/S187603411730206X
 http://www.sciencedirect.com/science/article/pii/S2093791116300610
 
 ###2.2.1 Fixed allocation based surveillance
-The following is an example of fixed allocation based surveillance plots in two distinct way of presenting. Same data used for Figure 1 is also implemented in this example. Instead of single $\alpha$ level is observed in Figure 1, a sequence of $\alpha$ levels (from 0 to 1 with a increment of 0.01) are now concerned and showed in Figure 2. For (a) and (b), y-axis represents a cumulative proportion of crashes, and x-axis individually represents cumulative ordered segments size and top proportion of segments expected to be monitored, which is $\alpha$. The following paragraphs will describe this figures in detail.
+The following is an example of fixed allocation based surveillance plots in two distinct way of presenting. Same data used for Figure 2.1 is also implemented in this example. Instead of single $\alpha$ level is observed in Figure 2.1, a sequence of $\alpha$ levels (from 0 to 1 with a increment of 0.01) are now concerned and showed in Figure 2.2. For (a) and (b), y-axis represents a cumulative proportion of crashes, and x-axis individually represents cumulative ordered segments size by crashes and top proportion of segments expected to be monitored, which is $\alpha$. The following paragraphs will describe this figures in detail.
 
 <center>
 ```{r}
@@ -80,7 +83,7 @@ par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
 
 plot.new()
 plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
+grid(nx = NULL, ny = NULL, col = "gray")
 axis(1);axis(2)
 lines(x = cumsum(z3$log.size), y = cumsum(z3$log.rate), type = "s")
 lines(x = cumsum(z4$log.size), y = cumsum(z4$log.rate), type = "s", col = 4)
@@ -92,7 +95,7 @@ legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n
 
 plot.new()
 plot.window(xlim = c(0, 1), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
+grid(nx = NULL, ny = NULL, col = "gray")
 axis(1);axis(2)
 lines(x = z1.lvl$alpha, y = z1.lvl$pct.events, type = "s")
 lines(x = z2.lvl$alpha, y = z2.lvl$pct.events, type = "s", col = 4)
@@ -102,21 +105,21 @@ text(x = thres, y = c(p3, p4, 0), labels = round(c(p3, p4, thres),4), pos = 2, c
 mtext("(b)", side = 1, line = 2, adj = 0.5)
 legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
 
-fig.des <- expression(paste("Figure 2: surveillance plots for weekdays and weekend under distinct perspectives", sep = ""))
+fig.des <- expression(paste("Figure 2.2: surveillance plots for weekdays and weekend under distinct perspectives", sep = ""))
 mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
 ```
 </center>
 
-Table 1 is obtained with arrangement by order and shows the composition for Figure 2 (a). *diff* is the difference between each segments; *rank* is ranked by proportion of crashes in individual segments; *p* is proportion of crashes in individual segments; *Log.size* and *log.rate* are the sum of *diff* and *p* with the same ranked segments respectively (e.g. in *rank* = 7, 4 segments are tied, therefore with a *log.size* = *diff* $\times$ 4 = 0.0078 and *log.rate* = *p* $\times$ 4 = 0.0145, since the *diff* is all equal on route 71). It is plotted cumulative segmental differences versus cumulative proportion of crashes in ordered segments, and readible to see the surveillance under different desired lengths of highway.
+Table 2.1 is obtained with arrangement by order and shows the composition for Figure 2.2 (a). *diff* is the difference between each segments; *rank* is ranked by proportion of crashes in individual segments; *p* is proportion of crashes in individual segments; *Log.size* and *log.rate* are the sum of *diff* and *p* with the same ranked segments respectively (e.g. in *rank* = 7, 4 segments are tied, therefore with a *log.size* = *diff* $\times$ 4 = 0.0078 and *log.rate* = *p* $\times$ 4 = 0.0145, since the *diff* is all equal on route 71). It is plotted cumulative segmental differences versus cumulative proportion of crashes in ordered segments, and readible to see the surveillance under different desired lengths of highway.
 
-Figure 2 (b), in analog of Figure 1 (a), will be showed simultaneously in the parentheses. The grey vertical line is the desired length of highway, top 6.26 *logmile* (or $\alpha =$ 0.18) being under surveillance. Under this scenario, 82.26% and 86.92% of total crashes will be primarily on top 6.26 *logmile* (or top 18% of total segments) for weekdays and weekend respectively.
+Figure 2.2 (b), in analog of Figure 2.2 (a), will be showed simultaneously in the parentheses. The grey vertical line is the desired length of highway, top 6.26 *logmile* (or $\alpha =$ 0.18) being under surveillance. Under this scenario, 82.26% and 86.92% of total crashes will be primarily on top 6.26 *logmile* (or top 18% of total segments) for weekdays and weekend respectively.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
-knitr::kable(head(z3, 10), caption = "Table 1: Partial output for Figure 2 (a)")
+knitr::kable(head(z3, 10), caption = "Table 2.1: Partial output for Figure 2.2 (a)")
 ```
 
 ###2.2.2 Threshold based surveillance
-Figure 3 shows an example of threshold based surveillance plot for weekdays and weekend. Y-axis is the proportion of segments above a given threshold whereas x-axis is desired threshold, which is the crash rate on a segment. Grey line is set to be a desired threshold 0.0019. 9.62% and 10.99% (or 176 and 201 segments) of total segments of their crash rates will be above a desired threshold of 0.0019 repectively. In comparison with fixed allocation based surveillance, it is also flexible to set up a desired threshold *c* instead of a desired proportion of segments $\alpha$ to be monitored.
+Figure 2.3 shows an example of threshold based surveillance plot for weekdays and weekend. Y-axis is the proportion of segments above a given threshold whereas x-axis is desired threshold, which is the crash rate on a segment. Grey line is set to be a desired threshold 0.0019. 9.62% and 10.99% (or 176 and 201 segments) of total segments of their crash rates will be above a desired threshold of 0.0019 repectively. In comparison with fixed allocation based surveillance, it is also flexible to set up a desired threshold *c* instead of a desired proportion of segments $\alpha$ to be monitored.
 
 Unlike the implementation of fixed allocation based surveillance, threshold based surveillance is directly built from raw data instead of ranking data first. Under a set of threshold based surveillance segments, this is a problem of giving priority to individual segment since no distinction shows beyond the entire set. Both systems have their own disadvantages and advantages; simultaneously using two systems provides an improved aspect of measuring the quality of data to set up a comparatively optimal cut-off point for surveillance.
 
@@ -126,7 +129,7 @@ par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(
 
 plot.new()
 plot.window(xlim = rev(c(0, max(thr))), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
+grid(nx = NULL, ny = NULL, col = "gray")
 axis(1);axis(2)
 lines(x = thr, y = z1.thres$size, type = "s")
 lines(x = thr, y = z2.thres$size, type = "s", col = 4)
@@ -137,7 +140,7 @@ p5 <- z1.thres[which(z1.thres$thr==v),]$size
 p6 <- z2.thres[which(z2.thres$thr==v),]$size
 text(x = v, y = c(p5+0.01, p6+0.04, 0), labels = round(c(p5, p6, v), 4), pos = 2, col = c(1, 4, 1))
 legend("topleft", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
-mtext("Figure 3: threshold based surveillance for weekdays and weekend", 
+mtext("Figure 2.3: threshold based surveillance for weekdays and weekend", 
       side = 1, adj = 0.5, outer = TRUE)
 ```
 </center>
@@ -157,14 +160,14 @@ For two-sample KS test $H_0: S_m(x) = S_n(x)$, the $D_{m,n}$ statistic is define
 
 <center> $D_{m,n} = \underset{x}{\operatorname{max}} |S_m(x) - S_n(x)|$ </center>
 
-If $D_{m,n} \ge d_0$, where $d_0 = c_{\alpha} \sqrt{\frac{1}{m} + \frac{1}{n}}$, $c_{\alpha}$ values can be found in any nonparametric materials, then $H_0$ is rejected, which implies $S_m(x)$ and $S_n(x)$ are from different distributions. Note that as $n, m \rightarrow \infty$, $c_{\alpha}$ is approximately $\sqrt{-\frac{1}{2} \operatorname{ln} (\frac{\alpha}{2})}$. Approximation of limiting $c_{\alpha}$ will be used for measure of distribution.
+If $D_{m,n} \ge d_0$, where $d_0 = c_{\alpha} \sqrt{\frac{1}{m} + \frac{1}{n}}$, $c_{\alpha}$ values can be found in any nonparametric materials, then $H_0$ is rejected, which implies $S_m(x)$ and $S_n(x)$ are from different distributions. Note that as $n, m \rightarrow \infty$, $c_{\alpha}$ is approximately $\sqrt{-\frac{1}{2} \operatorname{ln} (\frac{\alpha}{2})}$. Approximation of limiting $c_{\alpha}$ will be used for measure of distributions.
 
 In this study, two-sample KS test is primarily conducted as a measure of association between distributions in analog of Least Significant Difference (LSD) for multiple comparisons in parametric methods. This test is contructed based on the snenarios used from a surveillance perspective whereas the surveillance is constructed based on the level set method; therefore, three ways of evaluations of highway data under different scenarios are seemingly distinct but closely tied together to organize a broaden perspecive of highway data structures.
 
 Jean D. Gibbons, Subhabrata Chakraborti - Nonparametric Statistical Inference 4e (2003)
 
 ###2.3.1 Demonstration of conducting KS test
-Recall from 2.2, surveillance using level set is comparing the proportion of crashes under various $\alpha$ values. Continuing using the same data as examples showed earlier, $S_m(x)$ and $S_n(x)$ are *cdf*'s for weekdays and weekend with same number of $\alpha$ values (*m* = *n* = 101) using level set method repectively. Aussume significance level is 0.05, then, $D_{m,n} =$ 0.085 ($d_0 \approx$ 0.1911) with *p-value* 0.96, and therefore, $H_0: S_m(x) = S_n(x)$ is rejected. This is suggested that two distributions are indistinguishable. It is possible that model based on weekdays might have similar predictability with model based on weekend. Instead of two, one model might be sufficient for prediction and surveillance. 
+Recall from section 2.2, surveillance using level set is comparing the proportion of crashes under various $\alpha$ values. Continuing using the same data as examples showed earlier, $S_m(x)$ and $S_n(x)$ are *cdf*'s for weekdays and weekend with same number of $\alpha$ values (*m* = *n* = 101) using level set method repectively. Aussume significance level is 0.05, then, $D_{m,n} =$ 0.085 ($d_0 \approx$ 0.1911) with *p-value* 0.96, and therefore, $H_0: S_m(x) = S_n(x)$ is rejected. This is suggested that two distributions are indistinguishable. It is possible that model based on weekdays might have similar predictability with model based on weekend. Instead of two, one model might be sufficient for prediction and surveillance. 
 
 The purpose of conducting a KS test on a fixed allocation based surveillance is that patterns of the top desired percentage of total segments for compared distributions are intrigued instead of the entire original highway patterns. In ordered segments, unnecessary segments can be easily discarded (beyond a $\alpha$ level), and the desired set (within $\alpha$ level) can be used to construct merely one model to predict weekdays and weekend patterns with better performance and precision. Using this procedure, model complexity and performance can both be ideally achieved.
 
@@ -175,14 +178,14 @@ The Jaccard Index, or Jaccard similarity coefficient was introduced by Paul Jacc
 
 Jaccard, Paul (1912), The distribution of the flora in the alpine zone
 
-In accordance with level set method, Jaccard Index can be calculated under a sequence of $\alpha$ levels and the Jaccard Index plot is showed below in Figure 4. Grey lines are at $\alpha$ level 0.1 and 0.2, with percentages of matched segments 47.93% and 59.03% respectively for the Jaccard Index of weekdays and weekend sets. Note that percentage of matched rate stays constant starts from roughly $\alpha$ = 0.37, this is caused by no crash records within the rest of highway segments. 
+In accordance with level set method, Jaccard Index can be calculated under a sequence of $\alpha$ levels and the Jaccard Index plot is showed below in Figure 2.4. Grey lines are at $\alpha$ level 0.1 and 0.2, with percentages of matched segments 47.93% and 59.03% respectively for the Jaccard Index of weekdays and weekend sets. Note that percentage of matched rate stays constant starts from roughly $\alpha$ = 0.37, this is caused by no crash records within the rest of highway segments.  
 
 <center>
 ```{r}
 par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
 plot.new()
 plot.window(xlim = c(0, 1), ylim = c(0, 1), ylab = "% matched segments")
-grid(nx = NULL, ny = NULL, col = "lightgray")
+grid(nx = NULL, ny = NULL, col = "gray")
 axis(1);axis(2)
 lines(x = alpha, y = m1, type = "s")
 v1 <- c(0.1, 0.2)
@@ -190,7 +193,7 @@ abline(v = v1, col = "darkgrey")
 box(which = "plot")
 text(x = v1, y = m1[v1*length(alpha)+1]+0.02, 
      labels = round(m1[v1*length(alpha)+1], 4), pos = 2)
-mtext("Figure 4: Jaccard Index for weekdays and weekend sets", 
+mtext("Figure 2.4: Jaccard Index for weekdays and weekend sets", 
       side = 1, adj = 0.5, outer = TRUE)
 ```
 </center>
@@ -198,7 +201,7 @@ mtext("Figure 4: Jaccard Index for weekdays and weekend sets",
 <PAI, etc>
 
 #3. Predictability of Crash Data
-In this section, tools mentioned in section 2 will be implemented as a surveillance process of quality of data. Process will follow 
+In this section, tools mentioned in section 2 will be implemented as a surveillance process of quality of data.
 <Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs>
 
 ##3.1 Data sources
@@ -206,16 +209,108 @@ The dataset used is composed of two subsets: *Highway* data and *Crash* data, an
 
 The data used in this paper is obtained from The Center for Advanced Public Safety (CAPS) at The University of Alabama. CAPS also cooperates with centers in other universities to work on various projects in different areas such as traffic safety and engineering and analytics, and has access to these numerous valuable data sources such as highway and crash data in different time and areas. This benefits this paper to conduct thorough analyses.
 
+Grigorios Fountas a, Panagiotis Ch. Anastasopoulos, "A random thresholds random parameters hierarchical ordered probit analysis of highway accident injury-severities"
+
 ##3.2 Concentration of crashes: empirical performance measures
+In previous demonstrations, crashes behaviors along the highway in separated time, weekdays and weekend, are showed a process of screening data. Results are also presented that weekdays and weekend may consider both predictive, i.e., a model can be built using one of set, and this model may also capture a similar pattern for the other set. Other characteristrics of causes of crashes, e.g. time variation and segment variation, will be compared through the same process as demonstrations earlier to uncover patterns of latent connections.  
+
+###3.2.1 Time variation
+Given different time periods, distributions of crashes can be varied. Several comparisons of distributions from time to time will be illustrated and only insignificant groups are summarized under significance level of 0.05 in following tables.
+
+To make identifications between months is arduous by starting with a plot of ordered segments by crash percentages for months of year (Figure 3.1). January has higher intensity on crashes for first couple segments whereas October has relatively flat coverage across entire set of segments. It is expected that January may have higher predictability than October because of its concentration on fewer segments. 
+
+<center>
+```{r}
+load("~/moy.RData")
+xlim <- c(1, 300)
+ylim <- c(0, max(month$p))
+par(mfrow = c(4, 3), family = "serif", cex.axis = 0.7, 
+    mar = c(3.5, 2.5, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+for (obj in tag)
+{
+  ord.plot(get(obj), "p", xlim, ylim)
+  mtext(toupper(obj), side = 1, line = 2, cex = 0.7, adj = 0.5)
+}
+fig.des <- expression(paste("Figure 3.1: ordered segments by percentages of crashes for months of year", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+```
+</center>
+
+In conjuction with KS test results as showed in Table 3.1, subtle diversities in months become detected from the KS statistics. December is comparatively distinct from any other months, and then January, June, July and November. On the other hand, February through May and August through October may be individually similar to each other respectively. Note that these classifications or similarities may follow a pattern of an academic year. A scenario can be established for distinctions between semester and off-semester periods. Also, off-semester months are varied in each other whereas semester months are similar; this results that semester months may be more appropriate for prediction than off-semester months due to the diversities of distributions in off-semester period.
+
+```{r}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+text_tbl <- 
+  cbind(c(1:8),
+             Subject = c("Jan", "Feb", "Mar", "Apr", "May", "Jul", "Aug", "Sep"),
+             Insignificance = c("Jun (0.1906)",
+               "Apr (0.1630), Jul (0.0622), Nov (0.0602)",
+               "Apr (0.0395), May (0.0798), Sep (0.0280), Nov (0.1600)",
+               "May (0.1193), Sep (0.0675), Nov (0.1292)",
+               "Sep (0.0518), Nov (0.1881)",
+               "Nov (0.0748)",
+               "Oct (0.0530)",
+               "Nov (0.1794)"))
+kable(text_tbl, "html" ,
+      caption = "Table 3.1: KS tests using level set for months of year") %>%
+  kable_styling("striped", full_width = FALSE)
+  
+```
+
+Days of week are next of interest to be compared in the following (Figure 3.2). Again as same as the previous procedure is implemented, Sunday has higher intensity than other days. Monday through Saturday may on the other hand share similar intensity. Along with KS results from Table 3.2, Sunday and Friday are apart from the others; Tuesday through Thursday are comparatively stable whereas Monday and Saturday are similar in distributions. A possible classification may be midweekly and not midweekly patterns. Also, for days around midweek are found to be similar whereas the rest are distinct on the other hand. A midweekly based model appears to be more representive and stable than the other way under this circumstance.
+
+<center>
+```{r}
+tag <- c("sun","mon","tue","wed","thu","fri","sat")
+xlim <- c(1, 400)
+ylim <- c(0, max(week$p))
+par(mfrow = c(3, 3), family = "serif", cex.axis = 0.7, 
+    mar = c(3.5, 2.5, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+for (obj in tag)
+{
+  ord.plot(get(obj), "p", xlim, ylim)
+  mtext(toupper(obj), side = 1, line = 2, cex = 0.7, adj = 0.5)
+}
+fig.des <- expression(paste("Figure 3.2: ordered segments by percentages of crashes for days of week", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+```
+</center>
+
+```{r}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+text_tbl <- 
+  cbind(c(1:4),
+             Subject = c("Sun", "Mon", "Tue", "Wed"),
+             Insignificance = c("Fri (0.1906)",
+               "Wed (0.1630), Sat (0.0622)",
+               "Wed (0.0395), Thu (0.0798)",
+               "Thu (0.1193)"))
+kable(text_tbl, "html", 
+      caption = "Table 3.2: KS tests using level set for days of week") %>%
+  kable_styling("striped", full_width = FALSE) 
+  
+```
+
+Two primary time partitions, days of week and months of year, are ways of taking time into consideration before building models. One other possibility is to partition time of day into different time period. The purpose of screening data beforehand is to ensure the quality of data used is valuable enough to capture the true pattern of crashes based on certain characteristics, and this step is often ignored.
+
+###3.2.2 Segment variation
+An alternative way of partitioning data is screening under different size of segments. Recall from level set method, it captures the top proportion of segments expected to be monitored.
 
 
 
-- Concentration of crashes: empirical performance measures (evaluate optimal performance - using only training data, no model)
-		- vary segment
-		- vary time (e.g., full year, each month, daytime, dow, etc)
-		- show that e.g., mondays are more predictable than sundays. 
-			- in extreme: for continuous time and space, then perfectly predictable. 
-			- another extreme: worst (optimal) performance should be from using full year and large grid/segment size
+
+grid/segment size
 	- use type 1 to predict, use type 2 to evaluate
 		- type 1: day-time, type 2: night-time (etc, many scenarios)
 		- show performance according the the evaluation methods we defined in 1.
+		
+Crash Model Evaluation
+	- We may not need this for the paper, I will evaluate after first two parts are written
+	- Apply a standard model (no new methodology here)
+	- evaluate according to the methods we outlined
+	- show how close to optimal the method performs

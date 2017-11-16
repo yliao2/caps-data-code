@@ -51,7 +51,8 @@ origin.pair <- function(x, alpha, var)
 {
   a <- get(x[1])
   b <- get(x[2])
-  out <- ks.results(s1 = cumsum(a[[var]]), s2 = cumsum(b[[var]]), alpha = alpha)
+  if(sum(a[[var]])==1) {out <- ks.results(s1 = cumsum(a[[var]]), s2 = cumsum(b[[var]]), alpha = alpha)}
+  else {out <- ks.results(s1 = a[[var]], s2 = b[[var]], alpha = alpha)}
   return(out$out)
 }
 
@@ -171,6 +172,38 @@ tag <- c("sun","mon","tue","wed","thu","fri","sat")
 lvl.set.time(tag = tag, alpha = alpha)
 out3 <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
 pair.match(tag = tag, alpha = alpha)
+
+
+
+
+#figure 3.2
+#ordered percentages of crashes for days of week
+#-------------------------------------------------
+ord.plot <- function(data, var, xlim, ylim)
+{
+  d <- data
+  plot.new()
+  plot.window(xlim = xlim, ylim = ylim)
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2)
+  lines(x = 1:max(xlim), y = d[[var]][1:max(xlim)], type = "s")
+  box(which = "plot")
+}
+
+tag <- c("sun","mon","tue","wed","thu","fri","sat")
+xlim <- c(1, 400)
+ylim <- c(0, max(week$p))
+par(mfrow = c(3, 3), family = "serif", cex.axis = 0.7, 
+    mar = c(3.5, 2.5, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+for (obj in tag)
+{
+  ord.plot(get(obj), "p", xlim, ylim)
+  mtext(toupper(obj), side = 1, line = 2, cex = 0.7, adj = 0.5)
+}
+fig.des <- expression(paste("Figure 3.2: ordered percentages of crashes for days of week", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+
+
 
 
 

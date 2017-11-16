@@ -1,3 +1,6 @@
+library(dplyr)
+library(data.table)
+library(ggplot2)
 
 #mon of year screening
 #use function: obs.rank (create)
@@ -115,3 +118,35 @@ lvl.set.time(tag = tag, alpha = alpha)
 out3 <- rbind(jan.lvl,feb.lvl,mar.lvl,apr.lvl,may.lvl,jun.lvl,jul.lvl,
               aug.lvl,sep.lvl,oct.lvl,nov.lvl,dec.lvl)
 pair.match(tag = tag, alpha = alpha) %>% arrange(-match)
+
+
+
+
+
+
+
+
+#figure 3.1
+#ordered percentages of crashes for months of year
+#-------------------------------------------------
+ord.plot <- function(data, var, xlim, ylim)
+{
+  d <- data
+  plot.new()
+  plot.window(xlim = xlim, ylim = ylim)
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2)
+  lines(x = 1:max(xlim), y = d[[var]][1:max(xlim)], type = "s")
+  box(which = "plot")
+}
+xlim <- c(1, 300)
+ylim <- c(0, max(month$p))
+par(mfrow = c(4, 3), family = "serif", cex.axis = 0.7, 
+    mar = c(3.5, 2.5, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+for (obj in tag)
+{
+  ord.plot(get(obj), "p", xlim, ylim)
+  mtext(toupper(obj), side = 1, line = 2, cex = 0.7, adj = 0.5)
+}
+fig.des <- expression(paste("Figure 3.1: ordered percentages of crashes for months of year", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
