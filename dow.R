@@ -1,3 +1,5 @@
+function.path = "G:/caps/function_code.R"
+source(file = function.path)
 
 #day of week screening
 #use function: obs.rank (create)
@@ -8,77 +10,24 @@ week <- obs.rank(2015, 71, time)
 tag <- c("sun","mon","tue","wed","thu","fri","sat")
 alpha <- 0.05
 
-#subset "data" into "tag" given "time" in a ranked order (implicit)
-#------------------------------------------------------------------
-rank.time.dt <- function(data, tag, time)
-{
-  for (var in tag)
-  {assign(var, data %>% filter(get(time)==which(tag==var)) %>% arrange(rank), inherits = TRUE)}
-}
-#create separate data sets based on the setting "Line 5-9"
+
+
 #generate data: sun, mon, tue, wed, thu, fri, sat
+#------------------------------------------------
 rank.time.dt(data = week, tag = tag, time = time)
 
 
-#create lvl set results from subset "data" from "time"
-#use data generated from "Line 18"
-#-----------------------------------------------------
-lvl.set.time <- function(tag, alpha)
-{
-  for (var in tag)
-  {
-    out <- NULL
-    for (i in 1:length(alpha))
-    {
-      d <- data.frame(lvl.set(data = get(var), alpha = alpha[i]),
-                      time = which(tag==var))
-      out <- rbind(out, d)
-    }
-    assign(paste(var,".lvl",sep = ""), out, inherits = TRUE)
-  }
-}
-#create separate data sets based on setting "Line 5-9"
+
+#create separate data sets based on setting "Line 8-11"
 #combine the results into "out"
+#-------------------------------------------------------
 lvl.set.time(tag = tag, alpha = alpha)
 out <- rbind(sun.lvl, mon.lvl, tue.lvl, wed.lvl, thu.lvl, fri.lvl, sat.lvl)
 
 
-#fn. for paired comparison 
-#(x = which groups to compare (based on combn function), 
-# alpha = significance level)
-#---------------------------------------------------------
-origin.pair <- function(x, alpha, var)
-{
-  a <- get(x[1])
-  b <- get(x[2])
-  if(sum(a[[var]])==1) {out <- ks.results(s1 = cumsum(a[[var]]), s2 = cumsum(b[[var]]), alpha = alpha)}
-  else {out <- ks.results(s1 = a[[var]], s2 = b[[var]], alpha = alpha)}
-  return(out$out)
-}
 
-
-#fn. for ks result for multiple comparison
-#(data has to include all subsets)
-#-----------------------------------------
-pair.data <- function(data, tag, time, var, alpha)
-{
-  #combination of tag (for paired comparisons)
-  comb <- combn(x = tag, m = 2)
-  
-  for (i in 1:length(tag))
-  {assign(tag[i], data[which(data[[time]]==i),], inherits = TRUE)}
-  
-  #ks results for each pair
-  out <- NULL
-  for (i in 1:ncol(comb))
-  {out <- rbind(out, origin.pair(comb[,i], alpha = alpha, var = var))}
-  cbind(t(comb), out)
-}
-
-#=================================================
-
-
-
+#plot: distributions of crashes given different time
+#-------------------------------------------------------------
 hline.dat <- data.frame(DayOfWeekUSA = out$time, hl = out$thres)
 
 point.dat <- data.frame(rbind(sun[which(sun$p>=out$thres[1]), ],
@@ -96,6 +45,7 @@ ggplot(data = week, mapping = aes(x = Logmile, y = p)) +
   facet_grid(DayOfWeekUSA~.)
 
 
+
 #tests for surveillance plot setting for DOW data
 #(size of alpha vs. cumulative % crashes: largest -> smallest, in rank order)
 #----------------------------------------------------------------------------
@@ -107,9 +57,8 @@ ggplot(data = week, mapping = aes(x = Logmile, y = p)) +
 out1 <- NULL
 for (var in tag)
 {out1 <- rbind(out1, get(var))}
-
-pair.data(data = out1, time = time, 
-          tag = tag, var = "p", alpha = 0.05)
+dow.lvl.result <- pair.data(data = out1, time = time, 
+                            tag = tag, var = "p", alpha = 0.05)
 
 #ks test results for surveillance plot (sun ~ sat):
 # same:
@@ -119,7 +68,8 @@ pair.data(data = out1, time = time,
 # diff: (the rest)
 #
 #may suggest weekend vs. weekdays
-#--------------------------------
+#-----------------------------------------------------------------
+
 
 
 #level set setting for DOW data (% crashes vs. size of alpha)
@@ -130,15 +80,17 @@ alpha = seq(0, 1, by = 0.01)
 lvl.set.time(tag = tag, alpha = alpha)
 out2 <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
 
-
 #step 2: rename tag to .lvl data
 #compare every combination of .lvl data
 tag <- c("sun.lvl","mon.lvl","tue.lvl","wed.lvl","thu.lvl","fri.lvl","sat.lvl")
-pair.data(data = data.frame(out2), time = "time", 
-          tag = tag, var = "pct.events", alpha = 0.05)
+dow.lvl.result2 <- pair.data(data = data.frame(out2), time = "time", 
+                             tag = tag, var = "pct.events", alpha = 0.05) %>% 
+  mutate(Reference = toupper(substr(Reference, 1, 3)),
+         Compare = toupper(substr(Compare, 1, 3)))
 
-#only wed - thu has no difference in distributions
-#-------------------------------------------------
+#mon - tue, mon - wed, tue -wed, have no difference in distributions
+#-------------------------------------------------------------
+
 
 
 #only consider top 10% of segments
@@ -146,175 +98,319 @@ pair.data(data = data.frame(out2), time = "time",
 #find % matched segments for every combination of "tag"
 #(ex. sun - mon, sun - tue, sun - wed, ...)
 #-------------------------------------------------------
-pair.match <- function(tag, alpha)
-{
-  comb <- combn(x = tag, m = 2)
-  m1 <- NULL
-  for (i in 1:ncol(comb))
-  {
-    a <- get(comb[1, i])
-    b <- get(comb[2, i])
-    
-    n1 <- out[out$time==which(tag==comb[1,i]),]$nseg
-    n2 <- out[out$time==which(tag==comb[2,i]),]$nseg
-    
-    max <- length(unique(c(a[1:n1,]$Logmile, b[1:n2,]$Logmile)))
-    cond <- a[1:n1,]$Logmile %in% b[1:n2,]$Logmile
-    
-    m1 <- c(m1, sum(cond)/max)
-  }
-  data.frame(t(comb), match = m1)
-}
-#-------------------------------------------
+#alpha <- 0.05
+#tag <- c("sun","mon","tue","wed","thu","fri","sat")
+#lvl.set.time(tag = tag, alpha = alpha)
+#out3 <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
+#pair.match(tag = tag, alpha = alpha)
 
-alpha <- 0.05
+
+
+#============================
+#-- markdown figure format --
+#============================
+#figure 3.3
 tag <- c("sun","mon","tue","wed","thu","fri","sat")
-lvl.set.time(tag = tag, alpha = alpha)
-out3 <- rbind(sun.lvl,mon.lvl,tue.lvl,wed.lvl,thu.lvl,fri.lvl,sat.lvl)
-pair.match(tag = tag, alpha = alpha)
+xlim <- c(0, 0.3)
+ylim <- c(0, 1)
+group1 <- tag[2:4]
+group2 <- tag[!(tag %in% group1)]
+par(mfrow = c(1, 2), family = "serif", cex.axis = 0.7, 
+    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
 
+plot.new()
+plot.window(xlim = xlim, ylim = ylim)
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab=expression(alpha), ylab="Cumulative % Crashes", cex = 0.7)
+for (var in group1)
+{dt <- get(paste(var, ".lvl", sep = ""))
+ lines(x = dt$alpha, y = dt$pct.events, type = "s", col = which(group1==var))}
+box(which = "plot")
+legend("bottomright", toupper(substr(group1, 1, 3)), 
+       col = 1:length(group1), lwd = 2, lty = 1)
 
+plot.new()
+plot.window(xlim = xlim, ylim = ylim)
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab=expression(alpha), ylab="Cumulative % Crashes", cex = 0.7)
+for (var in group2)
+{dt <- get(paste(var, ".lvl", sep = ""))
+ lines(x = dt$alpha, y = dt$pct.events, type = "s", col = which(group2==var))}
+box(which = "plot")
+legend("bottomright", toupper(substr(group2, 1, 3)), 
+       col = 1:length(group2), lwd = 2, lty = 1)
 
+fig.des <- expression(paste("Figure 3.3: level sets for days of week", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+#-------------------------------------------------
 
-#figure 3.2
+#============================
+#-- markdown figure format --
+#============================
+#figure 3.4
 #ordered percentages of crashes for days of week
 #-------------------------------------------------
-ord.plot <- function(data, var, xlim, ylim)
-{
-  d <- data
-  plot.new()
-  plot.window(xlim = xlim, ylim = ylim)
-  grid(nx = NULL, ny = NULL, col = "lightgray")
-  axis(1);axis(2)
-  lines(x = 1:max(xlim), y = d[[var]][1:max(xlim)], type = "s")
-  box(which = "plot")
-}
-
 tag <- c("sun","mon","tue","wed","thu","fri","sat")
 xlim <- c(1, 400)
-ylim <- c(0, max(week$p))
-par(mfrow = c(3, 3), family = "serif", cex.axis = 0.7, 
-    mar = c(3.5, 2.5, 1, 1), oma = c(2, 0, 0, 0), las = 1)
-for (obj in tag)
-{
-  ord.plot(get(obj), "p", xlim, ylim)
-  mtext(toupper(obj), side = 1, line = 2, cex = 0.7, adj = 0.5)
-}
-fig.des <- expression(paste("Figure 3.2: ordered percentages of crashes for days of week", sep = ""))
+ylim <- c(0, 1)
+group1 <- tag[2:4]
+group2 <- tag[!(tag %in% group1)]
+par(mfrow = c(1, 2), family = "serif", cex.axis = 0.7, 
+    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+
+plot.new()
+plot.window(xlim = xlim, ylim = ylim)
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab="Ordered Segments", ylab="Cumulative % Crashes", cex = 0.7)
+for (var in group1)
+{lines(x = 1:max(xlim), y = cumsum(get(var)$p[1:max(xlim)]), 
+       type = "s", col = which(group1==var))}
+box(which = "plot")
+legend("bottomright", toupper(group1), col = 1:length(group1), lwd = 2, lty = 1)
+
+plot.new()
+plot.window(xlim = xlim, ylim = ylim)
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab="Ordered Segments", ylab="Cumulative % Crashes", cex = 0.7)
+for (var in group2)
+{lines(x = 1:max(xlim), y = cumsum(get(var)$p[1:max(xlim)]), 
+       type = "s", col = which(group2==var))}
+box(which = "plot")
+legend("bottomright", toupper(group2), col = 1:length(group2), lwd = 2, lty = 1)
+
+fig.des <- expression(paste("Figure 3.4: ordered segments by percentages of crashes for days of week", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+#------------------------------------------------
+
+
+
+
+#segments binnings (days of week)
+#----------------------------------
+time <- "DayOfWeekUSA"
+tag <- c("sun","mon","tue","wed","thu","fri","sat")
+xlim <- c(0, ceiling(max(week$Logmile))+1)
+brks <- seq(0, xlim[2], by = 1)
+tag.bin <- paste(tag, ".bin", sep = "")
+tag.bin.lvl <- paste(tag.bin, ".lvl", sep = "")
+bin2rank.time(data = week, time = time, tag = tag.bin, brks = brks)
+dow.bin <- NULL
+for (var in tag.bin)
+{dow.bin <- rbind(dow.bin, get(var))}
+
+#binnings (bin size = 1) using level sets
+#----------------------------------------
+lvl.set.time(tag = tag.bin, alpha = seq(0, 1, by = 0.01))
+
+#multiple comparisons for DOW binnings
+#----------------------------------------
+out4 <- rbind(sun.bin.lvl, mon.bin.lvl, tue.bin.lvl, 
+              wed.bin.lvl, thu.bin.lvl, fri.bin.lvl, 
+              sat.bin.lvl)
+dow.lvl.result3 <- pair.data(data = data.frame(out4), time = "time", 
+                             tag = tag.bin, var = "pct.events", alpha = 0.05) %>% 
+  mutate(Reference = toupper(substr(Reference, 1, 3)),
+         Compare = toupper(substr(Compare, 1, 3)))
+
+
+#========================================
+#--------    markdown format    ---------
+#========================================
+par(mfrow = c(1, 2), family = "serif", cex.axis = 0.7, 
+    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+
+plot.new()
+plot.window(xlim = c(1, max(dow.bin$rank)), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab="Ordered bins", ylab="Cumulative % Crashes", cex = 0.7)
+for (var in tag.bin)
+{tb <- get(var)
+ lines(x = tb$rank, y = cumsum(tb$p), type = "s", col = which(tag.bin==var))}
+box(which = "plot")
+legend("bottomright", toupper(substr(tag.bin, 1, 3)), col = 1:7, lwd = 2, lty = 1)
+
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab=expression(alpha), ylab="Cumulative % Crashes", cex = 0.7)
+for (var in tag.bin.lvl)
+{tb <- get(var)
+ lines(x = tb$alpha, y = tb$pct.events, type = "s", col = which(tag.bin.lvl==var))}
+box(which = "plot")
+legend("bottomright", toupper(substr(tag.bin.lvl, 1, 3)), 
+       col = 1:7, lwd = 2, lty = 1)
+
+fig.des <- expression(paste("Figure 3.8: ordered bins with bin size = 1 for days of week", sep = ""))
 mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
 
 
 
 
 
+#bin size of 0.5
+#---------------------------
+brks <- seq(0, xlim[2], by = 0.5)
+bin2rank.time(data = week, time = time, tag = tag.bin, brks = brks)
+dow.bin <- NULL
+for (var in tag.bin)
+{dow.bin <- rbind(dow.bin, get(var))}
+
+#binnings (bin size = 0.5) using level sets
+#----------------------------------------
+lvl.set.time(tag = tag.bin, alpha = seq(0, 1, by = 0.01))
+
+#multiple comparisons for DOW binnings
+#----------------------------------------
+out5 <- rbind(sun.bin.lvl, mon.bin.lvl, tue.bin.lvl, 
+              wed.bin.lvl, thu.bin.lvl, fri.bin.lvl, 
+              sat.bin.lvl)
+dow.lvl.result4 <- pair.data(data = data.frame(out5), time = "time", 
+                             tag = tag.bin, var = "pct.events", alpha = 0.05) %>% 
+  mutate(Reference = toupper(substr(Reference, 1, 3)),
+         Compare = toupper(substr(Compare, 1, 3)))
+
+
+#========================================
+#--------    markdown format    ---------
+#========================================
+par(mfrow = c(1, 2), family = "serif", cex.axis = 0.7, 
+    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+
+plot.new()
+plot.window(xlim = c(1, max(dow.bin$rank)), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab="Ordered bins", ylab="Cumulative % Crashes", cex = 0.7)
+for (var in tag.bin)
+{tb <- get(var)
+lines(x = tb$rank, y = cumsum(tb$p), type = "s", col = which(tag.bin==var))}
+box(which = "plot")
+legend("bottomright", toupper(substr(tag.bin, 1, 3)), col = 1:7, lwd = 2, lty = 1)
+
+tag.bin.lvl <- paste(tag.bin, ".lvl", sep = "")
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab=expression(alpha), ylab="Cumulative % Crashes", cex = 0.7)
+for (var in tag.bin.lvl)
+{tb <- get(var)
+lines(x = tb$alpha, y = tb$pct.events, type = "s", col = which(tag.bin.lvl==var))}
+box(which = "plot")
+legend("bottomright", toupper(substr(tag.bin.lvl, 1, 3)), 
+       col = 1:7, lwd = 2, lty = 1)
+
+fig.des <- expression(paste("Figure 3.9: ordered bins with bin size = 0.5 for days of week", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+------------------------------------------------
 
 
 
+#based on survillance plots and KS results:
+#combine Mon, Tue, Wed (similar) and use as a model
+#to predict: Thu ~ Sun
+#(original segments, without binning)
+#run line 8:17 to get data
+#---------------------------------------------------
+b4mid <- rbind(mon, tue, wed) %>% select(Logmile, n) %>% 
+  group_by(Logmile) %>% summarise(n = sum(n)) %>% 
+  mutate(rank = frank(-n, ties.method = "dense"))
 
+dow.mod <- data2pred(ref = b4mid, compr = thu, "Logmile")
+for (var in c("fri", "sat", "sun"))
+{
+  dow.mod <- cbind(dow.mod, 
+                   data2pred(ref = b4mid, compr = get(var), "Logmile")[,-1])
+}
+colnames(dow.mod) <- c("ref.rank", "thu", "thu.n", "fri", "fri.n", 
+                       "sat", "sat.n", "sun", "sun.n")
 
-
-
-
-
-
-
-
-#data separation given different time
-#only for original data (without any setting)
-#============================================
-#ks test for months (jan ~ dec)
-#------------------------------
-time <- "Month" #set up "time" var
-moy <- obs.rank(2015, 71, time = time) #observed data given "time"
-tag <- c("jan","feb","mar","apr",
-         "may","jun","jul","aug",
-         "sep","oct","nov","dec") #set up name tag for each group
-var <- "p"
-
-pair.data(time = time, data = moy, tag = tag, var = var, alpha = 0.05)
-
-#ks test: route 71, 2015 jan ~ dec (crtical point: 0.0449)
-# same:
-#  jan: jul
-#       sep
-#       oct
-#  mar: sep
-#       oct
-#  may: aug
-#  jul: sep
-#  sep: oct
-#  nov: dec
+#========================================
+#--------    markdown format    ---------
+#========================================
+par(family = "serif", cex.axis = 0.7, 
+    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+plot.new()
+plot.window(xlim = range(b4mid$rank), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab="Reference rank", ylab="Match rate", cex = 0.7)
+matlines(x = dow.mod[,1], y = dow.mod[,c(2,4,6,8)])
+box(which = "plot")
+legend("bottomright", c("Thu","Fri","Sat","Sun"), col = 1:4, lwd = 2)
+fig.des <- expression(paste("Figure 3.16: Predictive performace using Mon-Wed model", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
 #----------------------------------------
 
 
 
-#ks test for days of week (sun ~ sat)
-#------------------------------------
-time <- "DayOfWeekUSA" #set up "time" var
-dow <- obs.rank(2015, 71, time = time) #observed data given "time"
-tag <- c("sun.obs","mon.obs","tue.obs","wed.obs",
-         "thu.obs","fri.obs","sat.obs") #set up name tag for each group
-
-pair.data(time = time, data = dow, tag = tag, var = var, alpha = 0.05)
-
-#ks test: route 71, 2015 sun ~ sat (crtical point: 0.0449)
-#same: 
-# mon - tue (0.0304), wed (0.0407), fri (0.0286) 
-# tue - wed (0.0418), thu (0.0433), fri (0.0314), sat (0.0399)
-# wed - thu (0.0366), fri (0.0427), sat (0.0371)
-# 
-#different:
-# mon - thu (0.0484), sat (0.0513), sun (0.0746)
-# tue - sun (0.0673)
-# wed - sun (0.0831)
-# thu - fri (0.0470), sat (0.0470), sun (0.0961)
-# fri - sat (0.0497), sun (0.0644)
-# sat - sun (0.0842)
-#---------------------------------------------------------
 
 
 
-#ks test for time of day (shift12, shift4, shift3, shift2)
-#---------------------------------------------------------
-time <- "shift12" #set up "time" var
-tod <- obs.rank(2015, 71, time = time) #observed data given "time"
-tag <- c("shift1","shift2","shift3","shift4","shift5","shift6",
-         "shift7","shift8","shift9","shift10","shift11","shift12") #set up name tag for each group
+#days of week with bin size 1
+#line 359:363, to get data
+#-----------------------------------------
+time <- "DayOfWeekUSA"
+tag <- c("sun","mon","tue","wed","thu","fri","sat")
+xlim <- c(0, ceiling(max(week$Logmile))+1)
+brks <- seq(0, xlim[2], by = 1)
+bin2rank.time(data = week, time = time, tag = tag, brks = brks)
 
-pair.data(time = time, data = tod, tag = tag, var = var, alpha = 0.05)
+week.bin <- rbind(mon, tue, wed, thu, fri, sat) %>% select(breaks, counts) %>% 
+  group_by(breaks) %>% summarise(n = sum(counts)) %>% 
+  mutate(rank = frank(-n, ties.method = "dense"))
 
+dow.mod <- data2pred(ref = week.bin, compr = sun, "breaks")
 
-#result 1 (tod: 2 groups) (critical point = 0.0449): 
-# diff: 0am-12pm, 12pm-0am (0.0494)
-#----------------------------------
-#result 2 (tod: 3 groups) (critical point = 0.0449):
-# diff: 0-8, 8-16   (0.0952)
-#       0-8, 16-24  (0.1077)
-# same: 8-16, 16-24 (0.0370)
-#---------------------------
-#result 3 (tod: 6 groups) (critical point = 0.0449):
-# diff: 
-#  0-4: 4-8 (0.0863)
-#       8-12 (0.1338)
-#       12-16 (0.1469)
-#       16-20 (0.1593)
-#       20-24 (0.1481)
-#  4-8: 8-12 (0.0918)
-#       12-16 (0.0844)
-#       16-20 (0.1009)
-#       20-24 (0.0730)
-#  8-12: 12-16 (0.0588)
-#        20-24 (0.0642)
-#  12-16: 20-24 (0.0499)
-#  16-20: 20-24 (0.0639)
-# same:
-#  8-12: 16-20 (0.0413)
-#  12-16: 16-20 (0.0427)
-#------------------------
-#result 4 (tod: 12 groups) (critical point = 0.0449):
-# same: 10-12: 12-14
-#       12-14: 16-18
-#              18-20
-#       16-18: 18-20
-#       18-20: 20-22
-#-------------------
+colnames(dow.mod) <- c("ref.rank", "sun", "sun.n")
+
+#days of week with bin size 0.5
+#rerun 376:377, to get data
+#-----------------------------------------
+brks <- seq(0, xlim[2], by = 0.5)
+bin2rank.time(data = week, time = time, tag = tag, brks = brks)
+
+dow.bin <- NULL
+for (var in tag)
+{dow.bin <- rbind(dow.bin, get(var))}
+
+week.bin <- dow.bin %>% select(breaks, counts) %>% 
+  group_by(breaks) %>% summarise(n = sum(counts)) %>% 
+  mutate(rank = frank(-n, ties.method = "dense"))
+
+dow.mod <- data2pred(ref = week.bin, compr = sun, "breaks")
+for (var in tag[-1])
+{
+  dow.mod <- cbind(dow.mod, 
+                   data2pred(ref = week.bin, compr = get(var), "breaks")[,-1])
+}
+colnames(dow.mod) <- c("ref.rank","sun", "sun.n", "mon", "mon.n", "tue", "tue.n", 
+                       "wed", "wed.n", "thu", "thu.n", "fri", "fri.n", 
+                       "sat", "sat.n")
+#========================================
+#--------    markdown format    ---------
+#========================================
+par(mfrow = c(1, 2), family = "serif", cex.axis = 0.7, 
+    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+
+dow.y <- c(2) #bin size = 1
+dow.y <- c(2,4,6,8,10,12,14) #bin size = 0.5
+
+plot.new()
+plot.window(xlim = range(week.bin$rank), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);
+title(xlab="Reference rank", ylab="Match rate", cex = 0.7)
+matlines(x = dow.mod[,1], y = dow.mod[,dow.y])
+box(which = "plot")
+legend("bottomright", c("sun"), col = 1, lwd = 2) #bin size = 1
+legend("bottomright", tag, col = 1:length(tag), lwd = 2) #bin size = 0.5
+fig.des <- expression(paste("Figure 3.20: Predictive performace with bin size 1 and 0.5 for days of week", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+#----------------------------------------
