@@ -1,13 +1,16 @@
 ---
 title: 'Predictability of Crash Modelling From the Data with Improved Quality Using Level Sets Surveillance System'
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(bda)
+library(knitr)
+library(kableExtra)
+library(data.table)
 ```
-
-#Abstract
 
 #1. Introduction
 <build up scenario for problems, and summarize contents of section 2 and 3>
@@ -30,35 +33,8 @@ This setting is in a aspect of concertrating resources, say 0.05 in this example
 
 <center>
 ```{r}
-load("~/all_plot.RData")
-par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
-    mfrow = c(1, 2), oma = c(2, 0, 0, 0))
-
-plot.new()
-plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0,max(z$p)))
-grid(nx = NULL, ny = NULL, col = "gray")
-axis(1);axis(2)
-segments(x0 = z1$Logmile, y0 = z1$p, y1 = 0)
-points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p, cex = 0.8)
-abline(h = t1$thres, col = "darkgray")
-box(which = "plot")
-text(x = 32, y = t1$thres, labels = round(t1$thres, 4), pos = 3)
-mtext("(a)", side = 1, line = 2, adj = 0.5)
-
-
-plot.new()
-plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0,max(z$p)))
-grid(nx = NULL, ny = NULL, col = "gray")
-axis(1);axis(2)
-segments(x0 = z2$Logmile, y0 = z2$p, y1 = 0)
-points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p, cex = 0.8)
-abline(h = t2$thres, col = "darkgray")
-box(which = "plot")
-text(x = 32, y = t2$thres, labels = round(t2$thres, 4), pos = 3)
-mtext("(b)", side = 1, line = 2, adj = 0.5)
-
-fig.des <- expression(paste("Figure 2.1: weekdays (a) and weekend (b) with ", alpha, " = 0.05", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+load("~/wk_wkd.RData")
+source_lines("G:/caps/wk_wkd.R", 14:44)
 ```
 </center>
 
@@ -78,35 +54,8 @@ The following is an example of fixed allocation based surveillance plots in two 
 
 <center>
 ```{r}
-par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
-    mfrow = c(1, 2), oma = c(2, 0, 0, 0))
-
-plot.new()
-plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "gray")
-axis(1);axis(2)
-lines(x = cumsum(z3$log.size), y = cumsum(z3$log.rate), type = "s")
-lines(x = cumsum(z4$log.size), y = cumsum(z4$log.rate), type = "s", col = 4)
-abline(v = h, col = "darkgrey")
-box(which = "plot")
-text(x = h, y = c(p1, p2, 0), labels = round(c(p1, p2, h), 4), pos = 2, col = c(1, 4, 1))
-mtext("(a)", side = 1, line = 2, adj = 0.5)
-legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
-
-plot.new()
-plot.window(xlim = c(0, 1), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "gray")
-axis(1);axis(2)
-lines(x = z1.lvl$alpha, y = z1.lvl$pct.events, type = "s")
-lines(x = z2.lvl$alpha, y = z2.lvl$pct.events, type = "s", col = 4)
-abline(v = 0.18, col = "darkgrey")
-box(which = "plot")
-text(x = thres, y = c(p3, p4, 0), labels = round(c(p3, p4, thres),4), pos = 2, col = c(1, 4, 1))
-mtext("(b)", side = 1, line = 2, adj = 0.5)
-legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
-
-fig.des <- expression(paste("Figure 2.2: surveillance plots for weekdays and weekend under distinct perspectives", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+load("~/wk_wkd.RData")
+source_lines("G:/caps/wk_wkd.R", c(54:57, 63, 66:67, 72:76, 82:83, 93:121))
 ```
 </center>
 
@@ -115,7 +64,7 @@ Table 2.1 is obtained with arrangement by order and shows the composition for Fi
 Figure 2.2 (b), in analog of Figure 2.2 (a), will be showed simultaneously in the parentheses. The grey vertical line is the desired length of highway, top 6.26 *logmile* (or $\alpha =$ 0.18) being under surveillance. Under this scenario, 82.26% and 86.92% of total crashes will be primarily on top 6.26 *logmile* (or top 18% of total segments) for weekdays and weekend respectively.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
-knitr::kable(head(z3, 10), caption = "Table 2.1: Partial output for Figure 2.2 (a)")
+kable(head(z3, 10), caption = "Table 2.1: Partial output for Figure 2.2 (a)")
 ```
 
 ###2.2.2 Threshold based surveillance
@@ -125,23 +74,8 @@ Unlike the implementation of fixed allocation based surveillance, threshold base
 
 <center>
 ```{r}
-par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
-
-plot.new()
-plot.window(xlim = rev(c(0, max(thr))), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "gray")
-axis(1);axis(2)
-lines(x = thr, y = z1.thres$size, type = "s")
-lines(x = thr, y = z2.thres$size, type = "s", col = 4)
-v <- 0.0019
-abline(v = v, col = "darkgrey")
-box(which = "plot")
-p5 <- z1.thres[which(z1.thres$thr==v),]$size
-p6 <- z2.thres[which(z2.thres$thr==v),]$size
-text(x = v, y = c(p5+0.01, p6+0.04, 0), labels = round(c(p5, p6, v), 4), pos = 2, col = c(1, 4, 1))
-legend("topleft", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
-mtext("Figure 2.3: threshold based surveillance for weekdays and weekend", 
-      side = 1, adj = 0.5, outer = TRUE)
+load("~/wk_wkd.RData")
+source_lines("G:/caps/wk_wkd.R", 127:150)
 ```
 </center>
 
@@ -182,26 +116,12 @@ In accordance with level set method, Jaccard Index can be calculated under a seq
 
 <center>
 ```{r}
-par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
-plot.new()
-plot.window(xlim = c(0, 1), ylim = c(0, 1), ylab = "% matched segments")
-grid(nx = NULL, ny = NULL, col = "gray")
-axis(1);axis(2)
-lines(x = alpha, y = m1, type = "s")
-v1 <- c(0.1, 0.2)
-abline(v = v1, col = "darkgrey")
-box(which = "plot")
-text(x = v1, y = m1[v1*length(alpha)+1]+0.02, 
-     labels = round(m1[v1*length(alpha)+1], 4), pos = 2)
-mtext("Figure 2.4: Jaccard Index for weekdays and weekend sets", 
-      side = 1, adj = 0.5, outer = TRUE)
+load("~/wk_wkd.RData")
+source_lines("G:/caps/wk_wkd.R", c(208:218, 228:241))
 ```
 </center>
 
-<PAI, etc>
-
 #3. Predictability of Crash Data
-In this section, tools mentioned in section 2 will be implemented as a surveillance process of quality of data.
 <Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs>
 
 ##3.1 Data sources
@@ -212,105 +132,342 @@ The data used in this paper is obtained from The Center for Advanced Public Safe
 Grigorios Fountas a, Panagiotis Ch. Anastasopoulos, "A random thresholds random parameters hierarchical ordered probit analysis of highway accident injury-severities"
 
 ##3.2 Concentration of crashes: empirical performance measures
-In previous demonstrations, crashes behaviors along the highway in separated time, weekdays and weekend, are showed a process of screening data. Results are also presented that weekdays and weekend may consider both predictive, i.e., a model can be built using one of set, and this model may also capture a similar pattern for the other set. Other characteristrics of causes of crashes, e.g. time variation and segment variation, will be compared through the same process as demonstrations earlier to uncover patterns of latent connections.  
+In previous demonstrations, crashes behaviors along the highway given different time periods, weekdays and weekend, are primarily showed a process of measuring data. Results are also presented that weekdays and weekend may consider both predictive, i.e., a model can be built using one of both sets, and this model may also capture a similar pattern for the other set. Other characteristrics of causes of crashes, e.g. time variation and segment variation, will be compared through the same process as demonstrations earlier to uncover patterns of latent connections.  
 
 ###3.2.1 Time variation
-Given different time periods, distributions of crashes can be varied. Several comparisons of distributions from time to time will be illustrated and only insignificant groups are summarized under significance level of 0.05 in following tables.
+Given different time periods, distributions of crashes are varied. Several comparisons of distributions from time to time will be illustrated and only insignificant groups are summarized under significance level of 0.05 in following tables.
 
-To make identifications between months is arduous by starting with a plot of ordered segments by crash percentages for months of year (Figure 3.1). January has higher intensity on crashes for first couple segments whereas October has relatively flat coverage across entire set of segments. It is expected that January may have higher predictability than October because of its concentration on fewer segments. 
+The magnitude of differences in distributions is generally unobservable, but subtle diversities in months become detected from the KS statistics (Table 3.1). December is comparatively distinct from any other months, and then January, June, July and November. On the other hand, February through May and August through October may be individually similar to each other respectively. Note that these classifications or similarities may follow a pattern of an academic year. A scenario can be established for distinctions between semester and off-semester periods. Also, off-semester months are varied in each other whereas semester months are similar; this results that semester months may be more appropriate for prediction than off-semester months due to the diversities of distributions in off-semester period.
 
-<center>
 ```{r}
 load("~/moy.RData")
-xlim <- c(1, 300)
-ylim <- c(0, max(month$p))
-par(mfrow = c(4, 3), family = "serif", cex.axis = 0.7, 
-    mar = c(3.5, 2.5, 1, 1), oma = c(2, 0, 0, 0), las = 1)
-for (obj in tag)
-{
-  ord.plot(get(obj), "p", xlim, ylim)
-  mtext(toupper(obj), side = 1, line = 2, cex = 0.7, adj = 0.5)
-}
-fig.des <- expression(paste("Figure 3.1: ordered segments by percentages of crashes for months of year", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-```
-</center>
-
-In conjuction with KS test results as showed in Table 3.1, subtle diversities in months become detected from the KS statistics. December is comparatively distinct from any other months, and then January, June, July and November. On the other hand, February through May and August through October may be individually similar to each other respectively. Note that these classifications or similarities may follow a pattern of an academic year. A scenario can be established for distinctions between semester and off-semester periods. Also, off-semester months are varied in each other whereas semester months are similar; this results that semester months may be more appropriate for prediction than off-semester months due to the diversities of distributions in off-semester period.
-
-```{r}
-library(dplyr)
-library(knitr)
-library(kableExtra)
-
-text_tbl <- 
-  cbind(c(1:8),
-             Subject = c("Jan", "Feb", "Mar", "Apr", "May", "Jul", "Aug", "Sep"),
-             Insignificance = c("Jun (0.1906)",
-               "Apr (0.1630), Jul (0.0622), Nov (0.0602)",
-               "Apr (0.0395), May (0.0798), Sep (0.0280), Nov (0.1600)",
-               "May (0.1193), Sep (0.0675), Nov (0.1292)",
-               "Sep (0.0518), Nov (0.1881)",
-               "Nov (0.0748)",
-               "Oct (0.0530)",
-               "Nov (0.1794)"))
-kable(text_tbl, "html" ,
-      caption = "Table 3.1: KS tests using level set for months of year") %>%
+kable(month.lvl.result2, caption = "Table 3.1: KS tests using level set for months of year") %>%
   kable_styling("striped", full_width = FALSE)
   
 ```
 
-Days of week are next of interest to be compared in the following (Figure 3.2). Again as same as the previous procedure is implemented, Sunday has higher intensity than other days. Monday through Saturday may on the other hand share similar intensity. Along with KS results from Table 3.2, Sunday and Friday are apart from the others; Tuesday through Thursday are comparatively stable whereas Monday and Saturday are similar in distributions. A possible classification may be midweekly and not midweekly patterns. Also, for days around midweek are found to be similar whereas the rest are distinct on the other hand. A midweekly based model appears to be more representive and stable than the other way under this circumstance.
+Classifications based on semester and off-semestere choice using distributions of months are shown in Figure 3.1. For semester class curves appear to be more consistent and slightly diverse as the proportion of segments increases whereas curves for off-semester class are more diverse across a sequence of $\alpha$ values. It is possible that using any one of semester months to construct the baseline is likely to have similar predictability in the same class. For off-semester months, choice of months as the baseline results in comparatively lower predictability.
 
 <center>
 ```{r}
-tag <- c("sun","mon","tue","wed","thu","fri","sat")
-xlim <- c(1, 400)
-ylim <- c(0, max(week$p))
-par(mfrow = c(3, 3), family = "serif", cex.axis = 0.7, 
-    mar = c(3.5, 2.5, 1, 1), oma = c(2, 0, 0, 0), las = 1)
-for (obj in tag)
-{
-  ord.plot(get(obj), "p", xlim, ylim)
-  mtext(toupper(obj), side = 1, line = 2, cex = 0.7, adj = 0.5)
-}
-fig.des <- expression(paste("Figure 3.2: ordered segments by percentages of crashes for days of week", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+load("~/moy.RData")
+source_lines("G:/caps/moy.R", 125:157)
 ```
 </center>
 
+<center>
 ```{r}
-library(dplyr)
-library(knitr)
-library(kableExtra)
-text_tbl <- 
-  cbind(c(1:4),
-             Subject = c("Sun", "Mon", "Tue", "Wed"),
-             Insignificance = c("Fri (0.1906)",
-               "Wed (0.1630), Sat (0.0622)",
-               "Wed (0.0395), Thu (0.0798)",
-               "Thu (0.1193)"))
-kable(text_tbl, "html", 
+load("~/moy.RData")
+source_lines("G:/caps/moy.R", 164:194)
+```
+</center>
+
+Days of week are also of interest to be compared in the following (Figure 3.3) along with KS results from Table 3.2. Monday through Wednesday are comparatively stable and almost as same as each other in patterns; Thursday through Sunday are distinct from each other. A possible classification may be before-midweek and after-midweek patterns. A before-midweek based structure appears to be more representive and stable than the other group under this circumstance. Likewise, each of before-midweek based structure is expected to have higher predictability than of after-midweek based structure.
+
+<center>
+```{r}
+load("~/dow.RData")
+kable(dow.lvl.result2 %>% filter(p.value>=0.05), 
       caption = "Table 3.2: KS tests using level set for days of week") %>%
   kable_styling("striped", full_width = FALSE) 
   
 ```
+</center>
+<-------------->
 
-Two primary time partitions, days of week and months of year, are ways of taking time into consideration before building models. One other possibility is to partition time of day into different time period. The purpose of screening data beforehand is to ensure the quality of data used is valuable enough to capture the true pattern of crashes based on certain characteristics, and this step is often ignored.
+
+<center>
+```{r}
+load("~/dow.RData")
+source_lines("G:/caps/dow.R", 113:146)
+```
+</center>
+
+<center>
+```{r}
+load("~/dow.RData")
+source_lines("G:/caps/dow.R", 155:186)
+```
+</center>
+
+Two primary time separations, days of week and months of year, are ways of using one data to make predictions of the other data. One other possibility is to separate time of day into different time periods. The purpose of screening data beforehand is to ensure the quality of data used is predictive to capture the true pattern of crashes based on certain characteristics.
+
+Considering time of day divided into 2-hour, 4-hour, 8-hour and 12-hour periods starting from 00:00 for each category, it is more likely to go extreme condition while more categories are used, i.e., slightly difference in a specific time period and a highway segments tends to be significant. The boundary and range for different division for time of day are arbituary, other reasonable choices of time period are also applicable. For 2-hour periods, from 12:00 to 20:00, are showed to be insignificant but at the boundary of 0.05; for 4-hour periods, from 04:00 to 20:00 tend to have similar patterns; for 8-hour periods, 08:00 to 24:00, are also insignificant but close to the significant boundary; 12-hour periods are similar to each other.
+
+<center>
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(79:82, 101:108))
+kable(tod.lvl.result %>% filter(p.value>=0.05), 
+      caption = "Table 3.3: KS tests using level set for time of day in 12 shifts") %>%
+  kable_styling("striped", full_width = FALSE)
+
+source_lines("G:/caps/tod.R", c(84:87, 101:108))
+kable(tod.lvl.result %>% filter(p.value>=0.05), 
+      caption = "Table 3.4: KS tests using level set for time of day in 6 shifts") %>%
+  kable_styling("striped", full_width = FALSE)
+
+source_lines("G:/caps/tod.R", c(89:92, 101:108))
+kable(tod.lvl.result %>% filter(p.value>=0.05), 
+      caption = "Table 3.5: KS tests using level set for time of day in 3 shifts") %>%
+  kable_styling("striped", full_width = FALSE)
+
+source_lines("G:/caps/tod.R", c(94:97, 101:108))
+kable(tod.lvl.result %>% filter(p.value>=0.05), 
+      caption = "Table 3.6: KS tests using level set for time of day in 2 shifts") %>%
+  kable_styling("striped", full_width = FALSE)
+```
+</center>
+<-------------->
+
+
+<center>
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(79:82, 101:104, 116:129)) #2-hour
+source_lines("G:/caps/tod.R", c(84:87, 101:104, 119:129)) #4-hour
+source_lines("G:/caps/tod.R", c(89:92, 101:104, 119:129)) #8-hour
+source_lines("G:/caps/tod.R", c(94:97, 101:104, 119:132)) #12-hour
+```
+
+</center>
 
 ###3.2.2 Segment variation
-An alternative way of partitioning data is screening under different size of segments. Recall from level set method, it captures the top proportion of segments expected to be monitored.
+In time variations and previous descriptions, the distance between each primitive segments is fixed to show a thorough picture of distributions. Binning can determine a variety of distances to provide a less complex and flexible method of measurement. In most cases, binning is arduous to determine a suitable bin size because of its classification of observations at the boundaries; however, binning is simple to implement and adjust to requirements. Couple choices of binning size will be showed to observe the influences of predictions.
+
+Recall from the comparison between weekdays and weekend data, bin sizes of 1 and 0.5 for weekdays and weekend are compared under the ordered bins and level sets (Figure 3.6 and 3.7). In the demonstration of KS test previously (Section 2.3.1), the statistic is $D_{m,n} =$ 0.085, the maximal differences between distributions for two bin sizes is 0.0177 and 0.0153 repectively, which are insigificant and expecxted, because binning will result data being smoother.
+
+<center>
+```{r}
+load("~/wk_wkd.RData")
+source_lines("G:/caps/wk_wkd.R", 306:350)
+source_lines("G:/caps/wk_wkd.R", 354:390)
+```
+</center>
+
+Bin size of 1 and 0.5 for days of week are showed in Figure 3.8 and 3.9 along with KS results in table 3.7 and 3.8, respectively. Both results show insignificance in distributions whether in ordered bins or level sets fashion. With bin size of 1, Sunday appears to slightly stand out compared to the others although it shows insignificant. For the rest of the days, each of them can be used as reference and may still have the smiliar predictablity.
+
+<center>
+```{r}
+load("~/dow.RData")
+source_lines("G:/caps/dow.R", c(194:217))
+kable(dow.lvl.result3, caption = "Table 3.7: KS tests using level set with bin size 1 for days of week") %>% kable_styling("striped", full_width = FALSE) 
+
+source_lines("G:/caps/dow.R", c(258:276))
+kable(dow.lvl.result4, caption = "Table 3.8: KS tests using level set with bin size 0.5 for days of week") %>% kable_styling("striped", full_width = FALSE)
+```
+</center>
+<-------------->
 
 
+<center>
+```{r}
+load("~/dow.RData")
+source_lines("G:/caps/dow.R", c(194:207, 223:250))
+source_lines("G:/caps/dow.R", c(258:266, 282:310))
+```
+</center>
+
+Considering different bin size 1 and 0.5 for distributions of crashes for months of year from Table 3.9 and 3.10 along with Figure 3.10 and 3.11, differences between months become smaller. For bin size 1, only June and August still have apparent gap in distributions. For bin size 0.5, February has the similar pattern as April, July and November before binning; here it results in difference between February and July after binning. This may account for classifications for observations at the boundaries that sometimes cause inconsistent results. January, March, September and December are not showed on these table, which may suggest a close performance on predictions using any of them because of the similarities with other months.
+
+<center>
+```{r}
+load("~/moy.RData")
+source_lines("G:/caps/moy.R", c(200:226))
+kable(moy.lvl.result3 %>% filter(p.value<=0.05), caption = "Table 3.9: KS tests using level set with bin size 1 for months of year") %>% kable_styling("striped", full_width = FALSE) 
+
+source_lines("G:/caps/moy.R", c(266:288))
+kable(moy.lvl.result4 %>% filter(p.value<=0.05), caption = "Table 3.10: KS tests using level set with bin size 0.5 for months of year") %>% kable_styling("striped", full_width = FALSE) 
+```
+</center>
+<-------------->
 
 
-grid/segment size
-	- use type 1 to predict, use type 2 to evaluate
-		- type 1: day-time, type 2: night-time (etc, many scenarios)
-		- show performance according the the evaluation methods we defined in 1.
-		
-Crash Model Evaluation
-	- We may not need this for the paper, I will evaluate after first two parts are written
-	- Apply a standard model (no new methodology here)
-	- evaluate according to the methods we outlined
-	- show how close to optimal the method performs
+<center>
+```{r}
+load("~/moy.RData")
+source_lines("G:/caps/moy.R", c(200:214, 232:259))
+source_lines("G:/caps/moy.R", c(266:276, 293:320))
+```
+</center>
+
+Considering different bin size 1 and 0.5 for distributions of crashes for time of day from Table 3.11-17 along with Figure 3.11-14. For 12 shifts, 20:00-22:00 and 02:00-06:00 with bin size 1, 00:00-04:00 with bine size 0.5, are apparently different in distributions from rest of the groups individually; for 6 shifts, only 04:00-08:00 and 20:00-24:00 with bin size 1 is different than the rest whereas all are similar for bin size 0.5; for 3 shifts and 2 shifts are individually showed similar in its own separations.
+
+<center>
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(79:82, 140:141, 146, 150, 184:188))
+kable(tod.lvl.result2 %>% filter(p.value<=0.05), 
+      caption = "Table 3.11: KS tests using level set for time of day bin size 1 in 12 shifts") %>%  kable_styling("striped", full_width = FALSE)
+source_lines("G:/caps/tod.R", c(79:82, 140, 142, 146, 150, 184:188))
+kable(tod.lvl.result2 %>% filter(p.value<=0.05), 
+      caption = "Table 3.12: KS tests using level set for time of day bin size 0.5 in 12 shifts") %>%  kable_styling("striped", full_width = FALSE)
+```
+
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(84:87, 140:141, 146, 150, 184:188))
+kable(tod.lvl.result2 %>% filter(p.value<=0.05), 
+      caption = "Table 3.13: KS tests using level set for time of day bin size 1 in 6 shifts") %>%  kable_styling("striped", full_width = FALSE)
+#for bin size 0.5, all insignificant
+```
+
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(89:92, 140:141, 146, 150, 184:188))
+kable(tod.lvl.result2 %>% filter(p.value>=0.05), 
+      caption = "Table 3.14: KS tests using level set for time of day bin size 1 in 3 shifts") %>%  kable_styling("striped", full_width = FALSE)
+source_lines("G:/caps/tod.R", c(89:92, 140, 142, 146, 150, 184:188))
+kable(tod.lvl.result2 %>% filter(p.value>=0.05), 
+      caption = "Table 3.15: KS tests using level set for time of day bin size 0.5 in 3 shifts") %>%  kable_styling("striped", full_width = FALSE)
+```
+
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(94:97, 140:141, 146, 150, 184:188))
+kable(tod.lvl.result2, 
+      caption = "Table 3.16: KS tests using level set for time of day bin size 1 in 2 shifts") %>%  kable_styling("striped", full_width = FALSE)
+source_lines("G:/caps/tod.R", c(94:97, 140, 142, 146, 150, 184:188))
+kable(tod.lvl.result2, 
+      caption = "Table 3.17: KS tests using level set for time of day bin size 0.5 in 2 shifts") %>%  kable_styling("striped", full_width = FALSE)
+```
+</center>
+<-------------->
+
+
+<center>
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(79:82, 140:141, 143:175)) #2-hour, bin size = 1
+source_lines("G:/caps/tod.R", c(142, 155:175)) #2-hour, bin size = 0.5
+fig.des <- expression(paste("Figure 3.11: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 12 shifts", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+
+source_lines("G:/caps/tod.R", c(84:87, 140:141, 143:175)) #4-hour, bin size = 1
+source_lines("G:/caps/tod.R", c(142, 155:175)) #4-hour, bin size = 0.5
+fig.des <- expression(paste("Figure 3.12: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 6 shifts", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+
+source_lines("G:/caps/tod.R", c(89:92, 140:141, 143:175)) #8-hour, bin size = 1
+source_lines("G:/caps/tod.R", c(142, 155:175)) #8-hour, bin size = 0.5
+fig.des <- expression(paste("Figure 3.13: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 3 shifts", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+
+source_lines("G:/caps/tod.R", c(94:97, 140:141, 143:175)) #12-hour, bin size = 1
+source_lines("G:/caps/tod.R", c(142, 155:175)) #12-hour, bin size = 0.5
+fig.des <- expression(paste("Figure 3.14: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 2 shifts", sep = ""))
+mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+```
+</center>
+
+##3.3 Predictive performance
+After a variety of scenarios are compared and tools of surveillance plots and level levets are implemented, similarities and predictability that are discovered during the evaluation process will be tested in this section. A set of data, e.g. weekdays, which is considered more predctive, will be established as the baseline of a pseudo model, then the other set, e.g. weekend, will be tested based on this model.
+
+##3.3.1 Predictability on time variation
+Figure 3.15 shows the performance using one of the datasets, weekdays and weekend, as model, and the other as testing data. Using weekdays as model (black) has constantly higher predictability than using weekend as model (blue).
+
+<center>
+```{r}
+load("~/wk_wkd.RData")
+source_lines("G:/caps/wk_wkd.R", c(6:8, 396:415))
+```
+</center>
+
+For days of week (Figure 3.16 and Table 3.18), Monday through Wednesday are combined and used as a model based on the level sets surveillance and KS results; Thursday through Sunday are compared to the reference model. For each testing datasets, Sunday is the best under Mon-Wed model, 10 segments with highest crash rates can be captured; Friday is the worst but still can be all captured using Mon-Wed model while up to 22 segments with highest crash rates on Friday are compared.
+
+<center>
+```{r}
+load("~/dow.RData")
+source_lines("G:/caps/dow.R", c(8:17, 321:348))
+
+kable(dow.mod[1:15,], caption = "Table 3.18: match rate table for Mon-Wed model") %>%  kable_styling("striped", full_width = FALSE)
+```
+</center>
+
+For months of year (Figure 3.17 and Table 3.19), semester months (February through May and August through October) are combined and used as a model based on the analyses; rest of the months are compared to the model. January is the best using this model, 7 segments with highest crash rates on January can be captured; June, July, November and December are relatively predictive. Top 10 segments on June and July, 9 and 8 segments on November and December respectively, can be all captured.
+
+<center>
+```{r}
+load("~/moy.RData")
+source_lines("G:/caps/moy.R", c(8:17, 334:361))
+
+kable(moy.mod[1:10,], caption = "Table 3.19: match rate table for Feb-May and Aug-Oct model") %>%  kable_styling("striped", full_width = FALSE)
+```
+</center>
+
+Time of day can subset into 2-hour, 4-hour and 8-hour periods (Figure 3.18, Table 3.20-22). The base models are established based on level sets and KS results described in previous sections. In 2-hour periods, 12:00-18:00 are used for model. Except for 00:00-06:00 period with rarity of crashes that can be all captured as expected, up to top 11 crash rate segments can be all inclusive for the other 2-hour periods. In 4-hour periods, 04:00-20:00 periods are used as a model, and the other 2 4-hour periods will be compared to reference. Similar to 2-hour periods, top 14 segments from 20:00-24:00 will match model predictions. In 8-hour periods, 08:00-24:00 are used as a model and all 9 segments are matched using this model.
+
+<center>
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(245:246))
+source_lines("G:/caps/tod.R", c(79:82, 201:214, 241, 248:254, 256)) #2-hour
+source_lines("G:/caps/tod.R", c(84:87, 217:228, 242, 248:254, 257)) #4-hour
+source_lines("G:/caps/tod.R", c(89:92, 231:236, 243, 248:254, 258)) #8-hour
+source_lines("G:/caps/tod.R", c(260:261))
+```
+</center>
+<----------->
+
+<center>
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(79:82, 201:214)) #2-hour
+kable(tod.mod[1:10,], caption = "Table 3.20: 2-hour match rate table for 12:00-18:00 model") %>%  kable_styling("striped", full_width = FALSE)
+
+source_lines("G:/caps/tod.R", c(84:87, 217:228)) #4-hour
+kable(tod.mod[1:10,], caption = "Table 3.21: 4-hour match rate table for 04:00-20:00 model") %>%  kable_styling("striped", full_width = FALSE)
+
+source_lines("G:/caps/tod.R", c(89:92, 231:236)) #8-hour
+kable(tod.mod[1:10,], caption = "Table 3.22: 8-hour match rate table for 08:00-24:00 model") %>%  kable_styling("striped", full_width = FALSE)
+```
+</center>
+
+##3.3.2 Predictability on segment variation
+Different bin sizes of Logmile, 1 and 0.5, are compared to the model used similar distributions given different time periods. For the KS results within all groups are smiliar to each other, a model used all data is constructed and all datasets separated by different periods (e.g. Sunday through Saturday) are used as testing sets. For the other manipulation is that similar groups are combined and referenced as model, and the other groups will be testing using reference model.
+
+For weekdays and weekend (Figure 3.19), weekdays are first as model, and weekend is tested (black); then weekend is used as model and then testing weekdays (blue). Two bin sizes, 1 (left) and 0.5 (right) are implemented. It appears that both sets are fairly predictive except for weekend model with bin size 0.5 for the reasons of the classifications of observations at boundaries and rarity of crashes on weekend.
+
+<center>
+```{r}
+load("~/wk_wkd.RData")
+source_lines("G:/caps/wk_wkd.R", c(306:310, 425:429, 431:442))
+source_lines("G:/caps/wk_wkd.R", c(354:356, 425:429, 434:445))
+```
+</center>
+
+Days of week (Figure 3.20) with bin sizes 1 (left) and 0.5 (right) are manipulated. For size 1, Monday through Saturday are insignificant compared to Sunday in accordance with KS results in Section 3.2.2 and thus combined together and built as model. Sunday is then tested. For size 0.5, days of week are all comparatively insignificant and thus whole week is used as a model and each day is then tested. For Sunday, it appears to have similar predictability for both sizes. 
+
+<center>
+```{r}
+load("~/dow.RData")
+source_lines("G:/caps/dow.R", c(359:371, 399:400, 402, 405:412))
+source_lines("G:/caps/dow.R", c(376:395, 403, 405:411, 413:415))
+```
+</center>
+
+Months of year (Figure 3.21) with bin size 1 (left) and 0.5 (right) are compared. For size 1, only February and April are distinct from each other and therefore are used as testing data. For size 0.5, January, March, September and December are combined and served as a reference, the rest of months are compared to it.
+
+<center>
+```{r}
+load("~/moy.RData")
+source_lines("G:/caps/moy.R", c(371:392, 425:428, 431:438))
+source_lines("G:/caps/moy.R", c(399:418, 429:437, 439:442))
+```
+</center>
+
+Time of day with bin size 1 and 0.5 for 2-hour, 4-hour, 8-hour divisions are showed in Figure 3.22. For 2-hour division (top), 00:00-02:00, 06:00-18:00 and 22:00-24:00 with size 1 are built as model whereas every periods with size 0.5 except for 00:00-04:00 are used. For 4-hour division (middle), 00:00-04:00 and 08:00-20:00 with size 1 are combined whereas all with size 0.5 are included and retested. For 8-hour division, all periods with each size are combined then retested based on the combined model.
+
+<center>
+```{r}
+load("~/tod.RData")
+source_lines("G:/caps/tod.R", c(79:82, 275:276, 279, 282:298, 327, 330:341))
+source_lines("G:/caps/tod.R", c(79:82, 277, 280:295, 300, 327, 333:341))
+
+source_lines("G:/caps/tod.R", c(84:87, 275:276, 303, 282:295, 312, 327, 333:341))
+source_lines("G:/caps/tod.R", c(84:87, 277, 304, 282:290, 307:310, 313:315, 328, 333:339, 342))
+
+source_lines("G:/caps/tod.R", c(89:92, 275:276, 318, 282:290, 307:310, 322, 328,  333:339, 342))
+source_lines("G:/caps/tod.R", c(89:92, 277, 319, 282:290, 307:310, 322, 328,  333:339, 342:346))
+```
+</center>
