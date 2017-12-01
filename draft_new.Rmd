@@ -34,7 +34,7 @@ This setting is in a aspect of concertrating resources, say 0.05 in this example
 <center>
 ```{r}
 load("~/wk_wkd.RData")
-source_lines("G:/caps/wk_wkd.R", 14:44)
+source_lines("wk_wkd.R", 14:44)
 ```
 </center>
 
@@ -82,13 +82,18 @@ source_lines("G:/caps/wk_wkd.R", 127:150)
 ##2.3 Kolmogorov-Smirnov test
 In analog of parametric method, *Q-Q* plots or *P-P* plots for assessing normality use quantile and percentile statistics to compare the magnitude of deviations between estimated and hypothetical distributions. Kolmogorov-Smirnov test (KS test) is a common nonparametric method to evaluate the goodness of fit between estimated and hypothetical distribution. For two-sample KS test, two random samples are compared to observe magnitude of differences based on their distributions. The primary approach of finding estimated distribution of a random variable is empirical cumulative distribution function (*ecdf*) or empirical distribution function (*edf*). An *ecdf* $S_n(x)$ is defined as:
 
-<center> $S_n(x) = \sum_{i=1}^{n}{\textbf{I}(x_i \le x)}/n$ </center>
+$$S_n(x) = \sum_{i=1}^{n}{\textbf{I}(x_i \le x)}/n$$
 
 where $\textbf{I}(x_i \le x)$ is a indicator function that equals to 1 if $x_i \le x$, and 0 otherwise.
 
 For one-sample KS test $H_0: S_n(x) = F_X(x)$, the $D_n$ statistic is defined as:
 
-<center> $D_n = \underset{x}{\operatorname{sup}} |S_n(x) - F_X(x)|$ </center>
+\begin{equation}
+D_n = \underset{x}{\operatorname{sup}} |S_n(x) - F_X(x)|
+label{eq:KS}
+\end{equation}
+
+REMOVE: See \eqref{eq:KS} 
 
 For two-sample KS test $H_0: S_m(x) = S_n(x)$, the $D_{m,n}$ statistic is defined as:
 
