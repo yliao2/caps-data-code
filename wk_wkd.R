@@ -1,4 +1,4 @@
-function.path = "G:/caps/function_code.R"
+function.path = "function_code.R"
 source(file = function.path)
 
 #level set setting (weekend & weekdays)
@@ -15,30 +15,30 @@ alpha = 0.05
 t1 <- data.frame(lvl.set(z1, alpha))
 t2 <- data.frame(lvl.set(z2, alpha))
 
-par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
+par(family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
     mfrow = c(1, 2), oma = c(2, 0, 0, 0))
 
 plot.new()
 plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, max(z$p)))
 grid(nx = NULL, ny = NULL, col = "lightgray")
 axis(1);axis(2)
+title(main="(a)",xlab="Logmile", ylab="Crash rate", cex = 0.7)
 segments(x0 = z1$Logmile, y0 = z1$p, y1 = 0)
 points(x = z1[which(z1$p>=t1$thres), ]$Logmile, y = z1[which(z1$p>=t1$thres), ]$p, cex = 0.8)
 abline(h = t1$thres, col = "darkgray")
 box(which = "plot")
 text(x = 32, y = t1$thres, labels = round(t1$thres, 4), pos = 3)
-mtext("(a)", side = 1, line = 2, adj = 0.5)
 
 plot.new()
 plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, max(z$p)))
 grid(nx = NULL, ny = NULL, col = "lightgray")
 axis(1);axis(2)
+title(main="(b)", xlab="Logmile", ylab="Crash rate", cex = 0.7)
 segments(x0 = z2$Logmile, y0 = z2$p, y1 = 0)
 points(x = z2[which(z2$p>=t2$thres), ]$Logmile, y = z2[which(z2$p>=t2$thres), ]$p, cex = 0.8)
 abline(h = t2$thres, col = "darkgray")
 box(which = "plot")
 text(x = 32, y = t2$thres, labels = round(t2$thres, 4), pos = 3)
-mtext("(b)", side = 1, line = 2, adj = 0.5)
 
 fig.des <- expression(paste("Figure 2.1: weekdays (a) and weekend (b) with ", alpha, " = 0.05", sep = ""))
 mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
@@ -90,31 +90,31 @@ legend("bottomright", c("wk", "wkd"), col = c(1, 4), lty = 1)
 #--------------------------
 #markdown figure format use
 #--------------------------
-par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1,
+par(family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
     mfrow = c(1, 2), oma = c(2, 0, 0, 0))
 
 plot.new()
 plot.window(xlim = c(0, max(z$Logmile)), ylim = c(0, 1))
 grid(nx = NULL, ny = NULL, col = "lightgray")
 axis(1);axis(2)
+title(main="(a)",xlab="Size of Logmile", ylab="Crash rate", cex = 0.7)
 lines(x = cumsum(z3$log.size), y = cumsum(z3$log.rate), type = "s")
 lines(x = cumsum(z4$log.size), y = cumsum(z4$log.rate), type = "s", col = 4)
 abline(v = h, col = "darkgrey")
 box(which = "plot")
-text(x = h, y = c(p1, p2, 0), labels = round(c(p1, p2, h), 4), pos = 2, col = c(1, 4, 1))
-mtext("(a)", side = 1, line = 2, adj = 0.5)
+text(x = h, y = c(p1, p2, 0), labels = round(c(p1, p2, h), 4), pos = 4, col = c(1, 4, 1))
 legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
 
 plot.new()
 plot.window(xlim = c(0, 1), ylim = c(0, 1))
 grid(nx = NULL, ny = NULL, col = "lightgray")
-axis(1);axis(2)
+axis(1);axis(2);
+title(main="(b)",xlab=expression(alpha), ylab="Crash rate", cex = 0.7)
 lines(x = z1.lvl$alpha, y = z1.lvl$pct.events, type = "s")
 lines(x = z2.lvl$alpha, y = z2.lvl$pct.events, type = "s", col = 4)
 abline(v = 0.18, col = "darkgrey")
 box(which = "plot")
-text(x = thres, y = c(p3, p4, 0), labels = round(c(p3, p4, thres),4), pos = 2, col = c(1, 4, 1))
-mtext("(b)", side = 1, line = 2, adj = 0.5)
+text(x = thres, y = c(p3, p4, 0), labels = round(c(p3, p4, thres),4), pos = 4, col = c(1, 4, 1))
 legend("bottomright", c("Weekdays", "Weekend"), col = c(1, 4), lty = 1, bty = "n")
 
 fig.des <- expression(paste("Figure 2.2: surveillance plots for weekdays and weekend under distinct perspectives ", alpha, " levels", sep = ""))
@@ -130,12 +130,12 @@ thr <- seq(0, round(max(u)+0.005, 2), by = 0.0001)
 z1.thres <- thres.out(data = z1, var = "p", thr = thr)
 z2.thres <- thres.out(data = z2, var = "p", thr = thr)
 
-par(family = "serif", cex.axis = 0.7, mar = c(3.5, 2.5, 1, 1), las = 1, oma = c(2, 0, 0, 0))
+par(family = "serif", cex.axis = 0.7, mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0))
 
 plot.new()
 plot.window(xlim = rev(c(0, max(thr))), ylim = c(0, 1))
 grid(nx = NULL, ny = NULL, col = "lightgray")
-axis(1);axis(2)
+axis(1);axis(2);title(xlab="Threshold", ylab=expression(alpha), cex = 0.7)
 lines(x = thr, y = z1.thres$size, type = "s")
 lines(x = thr, y = z2.thres$size, type = "s", col = 4)
 
@@ -153,10 +153,10 @@ mtext("Figure 2.3: threshold based surveillance for weekdays and weekend",
 #ks test for surveillance plot (not significant)
 #-----------------------------------------------
 t <- ks.results(s1 = z1.lvl$pct.events, s2 = z2.lvl$pct.events, alpha = 0.05)
-data.frame(cbind(alpha, d = abs(t$d))) %>% filter(d == t$max.d)
+max.d.pt <- data.frame(cbind(alpha, d = abs(t$d))) %>% filter(d == t$max.d)
 
-plot(x = alpha, y = abs(t$d), type = "s", xlab = expression(alpha), ylab = "distance")
-abline(h = 0, col = "darkgray")
+plot(x = alpha, y = abs(t$d), xlab = expression(alpha), ylab = "distance")
+abline(v = max.d.pt$alpha, h = 0, col = "darkgray")
 
 #percentage of crashes in a size/alpha (%) of highest crash rate segments
 #ex. alpha = 0.3, proportion of segments id as HS is around 30%, 100% of
@@ -447,3 +447,33 @@ mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
 #line:354:356, to get data
 #and repeat 426:429
 #------------------------------------------------
+
+
+
+
+
+
+
+
+
+head(z1,10);head(z2,10)
+unique(z1$rank);unique(z2$rank)
+a = NULL
+for (i in 1:length(unique(z1$rank)))
+{
+  ref = z1[z1$rank<=i,]$Logmile
+  a = c(a, sum(z2[z2$Logmile %in% ref,]$p))
+}
+
+b = NULL
+for (i in 1:length(unique(z2$rank)))
+{
+  ref = z2[z2$rank<=i,]$Logmile
+  b = c(b, sum(z1[z1$Logmile %in% ref,]$p))
+}
+b
+
+plot(x = 1:length(unique(z1$rank)), y = a, type = "S")
+lines(x = 1:length(unique(z2$rank)), y = b, type = "S", col = 4)
+abline(v = c(length(unique(z1$rank)), length(unique(z2$rank))), 
+       h = 1, col = 3)
