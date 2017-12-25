@@ -18,10 +18,10 @@ library(bda)
 #=========================================
 
 #---------------------------------------------------------------------------
-crash <- read.csv("G:/caps/data/Crash-02-28.csv",sep=",", header=TRUE)
-crashreport2 <- read.csv("G:/caps/data/CrashReports2.csv",sep=",", header=TRUE)
-highwaycrash <- read.csv("G:/caps/data/HighwayCrash-1-2016.csv",sep=",", header=TRUE)
-highway <- read.csv("G:/caps/data/Highway.csv",sep=",", header=TRUE)
+crash <- read.csv("D:/caps/data/Crash-02-28.csv",sep=",", header=TRUE)
+crashreport2 <- read.csv("D:/caps/data/CrashReports2.csv",sep=",", header=TRUE)
+highwaycrash <- read.csv("D:/caps/data/HighwayCrash-1-2016.csv",sep=",", header=TRUE)
+highway <- read.csv("D:/caps/data/Highway.csv",sep=",", header=TRUE)
 #---------------------------------------------------------------------------
 
 #use highwaycrash & crash to merge into c
@@ -108,13 +108,13 @@ obs2ref <- function(year, route, time)
 
 #ks test fn
 #-------------------------------------------
-ks.results <- function(s1, s2, alpha)
+ks.results <- function(s1, s2, alpha, lvl = TRUE)
 {
   n <- length(s1); m <- length(s2)
   c.alpha <- sqrt(-0.5*log(alpha/2))
   bound <- c.alpha*sqrt(1/n+1/m)
   d <- s1-s2
-  max.d <- max(abs(s1-s2))
+  max.d <- ifelse(lvl==TRUE, max(abs(d)), max(abs(d[1:min(n,m)])))
   p <- min(2*exp(-2*max.d^2/(1/n+1/m)), 1)
   if (max.d>=bound){out = paste("Reject H0. D.max = ", round(max.d, 4), " >= ", 
                                 round(bound, 4), " sig. level = ", alpha, sep = "")}
@@ -276,66 +276,45 @@ lvl.set.time <- function(tag, alpha)
 #(x = which groups to compare (based on combn function), 
 # alpha = significance level)
 #---------------------------------------------------------
-origin.pair <- function(x, alpha, var)
+origin.pair <- function(ref, compare, sig = 0.05, var = "Logmile", opt=TRUE)
 {
-  a <- get(x[1])
-  b <- get(x[2])
-  if(sum(a[[var]])==1)
-    {out <- ks.results(s1 = cumsum(a[[var]]), s2 = cumsum(b[[var]]), alpha = alpha)}
-  else
-    {out <- ks.results(s1 = a[[var]], s2 = b[[var]], alpha = alpha)}
-  return(out)
+  l <- as.matrix(expand.grid(list(ref, compare)))
+  n <- nrow(l)
+  out1 <- NULL
+  out2 <- NULL
+  for (i in 1:n)
+  {
+    a <- get(l[i,1]); a.lvl <- get(paste(l[i,1],".lvl",sep=""))
+    b <- get(l[i,2]); b.lvl <- get(paste(l[i,2],".lvl",sep=""))
+    
+    l1 <- NULL
+    if(opt==TRUE)
+    {
+      for (j in 1:length(a.lvl$alpha))
+      {
+        l1 <- c(l1, pred.rank(ref = a[0:a.lvl$nseg[j],], 
+                              compare = b[0:b.lvl$nseg[j],], var = var, rank = FALSE))
+      }
+      k <- ks.results(s1 = a.lvl$pct.events, s2 = l1, alpha = sig)
+    }
+    else
+    {
+      l1 <- pred.rank(ref = a, compare = b)$cum.match.pct
+      true1 <- a %>% select(rank, p) %>% group_by(rank) %>% mutate(sum.p = sum(p)) %>% distinct()
+      k <- ks.results(s1 = cumsum(true1$sum.p), s2 = l1, alpha = sig, lvl=FALSE)
+    }
+  
+    out1 <- c(out1, k$max.d)
+    out2 <- c(out2, k$p.value)
+    out3 <- k$bound
+  }
+  m1 <- round(matrix(out1, ncol = length(ref), 
+                     byrow = TRUE, dimnames = list(ref,compare)),4)
+  m2 <- round(matrix(out2, ncol = length(ref), 
+                     byrow = TRUE, dimnames = list(ref,compare)),4)
+  list(max.d = m1, p.value = m2, bound = out3)
 }
 #---------------------------------------------------------
-
-
-
-#fn. for ks result for multiple comparison
-#(data has to include all subsets)
-#-----------------------------------------
-pair.data <- function(data, tag, time, var, alpha)
-{
-  #combination of tag (for paired comparisons)
-  comb <- combn(x = tag, m = 2)
-  
-  for (i in 1:length(tag))
-  {assign(tag[i], data[which(data[[time]]==i),], inherits = TRUE)}
-  
-  #ks results for each pair
-  out <- NULL
-  for (i in 1:ncol(comb))
-  {test <- origin.pair(comb[,i], alpha = alpha, var = var)
-   out <- rbind(out, round(c(test$max.d, test$p.value), 4))}
-  colnames(out) <- c("D", "p.value")
-  data.frame(Reference = t(comb)[,1], Compare = t(comb)[,2], out)
-}
-#------------------------------------------
-
-
-
-#find % matched segments for every combination of "tag"
-#(ex. sun - mon, sun - tue, sun - wed, ...)
-#------------------------------------------
-pair.match <- function(tag, alpha)
-{
-  comb <- combn(x = tag, m = 2)
-  m1 <- NULL
-  for (i in 1:ncol(comb))
-  {
-    a <- get(comb[1, i])
-    b <- get(comb[2, i])
-    
-    n1 <- out[out$time==which(tag==comb[1,i]),]$nseg
-    n2 <- out[out$time==which(tag==comb[2,i]),]$nseg
-    
-    max <- length(unique(c(a[1:n1,]$Logmile, b[1:n2,]$Logmile)))
-    cond <- a[1:n1,]$Logmile %in% b[1:n2,]$Logmile
-    
-    m1 <- c(m1, sum(cond)/max)
-  }
-  data.frame(t(comb), match = m1)
-}
-#------------------------------------------
 
 
 
@@ -350,22 +329,49 @@ source_lines <- function(file, lines)
 #modification of jaccard index:
 #= intersection(reference, compare)/(reference: model)
 #------------------------------------------------------------
-data2pred <- function(ref, compr, var)
+data2pred <- function(ref, compare, var = "Logmile", alpha = seq(0,1,by=0.01))
 {
-  x <- ref
-  y <- compr
-  m <- length(unique(x$rank))
-  
-  match <- NULL
-  nmatch <- NULL
-  for (i in 1:m)
+  l <- as.matrix(expand.grid(list(ref, compare)))
+  n <- nrow(l)
+  match.rate <- alpha
+  for (i in 1:n)
   {
-    x1 <- x[which(x$rank<=i), ][[var]]
-    y1 <- y[which(y$rank<=i), ][[var]]
-    cond <- y1 %in% x1
-    match <- c(match, sum(cond)/length(x1))
-    nmatch <- c(nmatch, sum(cond))
+    a <- get(l[i,1]); a.lvl <- get(paste(l[i,1],".lvl",sep=""))
+    b <- get(l[i,2]); b.lvl <- get(paste(l[i,2],".lvl",sep=""))
+    m <- nrow(a.lvl)
+    match <- NULL
+    nmatch <- NULL
+    for (j in 1:m)
+    {
+      a1 <- a[0:a.lvl$nseg[j],][[var]]
+      b1 <- b[0:b.lvl$nseg[j],][[var]]
+      cond <- b1 %in% a1
+      match <- c(match, sum(cond)/length(a1))
+    }
+    match.rate <- cbind(match.rate, match)
   }
-  data.frame(ref.rank = 1:m, match = match, nmatch = nmatch)
+  colnames(match.rate) <- c("alpha",compare)
+  data.frame(match.rate)
 }
 #------------------------------------------------------------
+
+
+
+#-------------------------------------------------------------------------------
+pred.rank <- function(ref, compare, var = "Logmile", rank=TRUE)
+{
+  a = NULL
+  if (rank==TRUE)
+  {
+    u = unique(ref$rank)
+    for (i in 1:length(u))
+    {a = c(a, sum(compare[compare[[var]] %in% ref[ref$rank<=i,][[var]],]$p))}
+    data.frame(ref.rank = u, cum.match.pct = a)
+  }
+  else
+  {
+    a = sum(compare[compare[[var]] %in% ref[[var]],]$p)
+    return(a)
+  }
+}
+#-------------------------------------------------------------------------------
