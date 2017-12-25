@@ -1,6 +1,6 @@
-function.path = "G:/caps/function_code.R"
-source(file = function.path)
-
+#function.path = "D:/caps/function_code.R"
+#source(file = function.path)
+load("tod.RData")
 #time of day screening
 #use function: obs.rank (create)
 #level set plot for TOD (alpha = 0.05)
@@ -46,318 +46,369 @@ ggplot(data = tod, mapping = aes(x = Logmile, y = p)) +
   facet_grid(shift12~.)
 
 
-#tests for surveillance plot setting for TOD data
-#(size of alpha vs. cumulative % crashes: largest -> smallest, in rank order)
-#----------------------------------------------------------------------------
-#time <- "shift12"
-#tod <- obs.rank(2015, 71, time)
-#tag <- c(paste("s", 1:12, sep = ""))
-#alpha <- 0.05
-
-out1 <- NULL
-for (var in tag)
-{out1 <- rbind(out1, get(var))}
-
-pair.data(data = out1, time = time, 
-          tag = tag, var = "p", alpha = 0.05)
-
-#ks test results for surveillance plot (00-02 ~ 22-24):
-# same:
-#  06-08 - 08-10
-#  08-10 - 10-12, 18-20
-#  10-12 - 18-20
-#  12-14 - 14-16
-#  14-16 - 16-18
-# diff: (the rest)
-#
-#may suggest 4-hour period
-#-------------------------
 
 
-#level set setting for TOD data (% crashes vs. size of alpha)
-#------------------------------------------------------------
+#KS tests: on level sets & rank for TOD data (% crashes vs. size of alpha)
+#------------------------------------------------------------------------
+
+#2-hour period
 time <- "shift12"
 tod <- obs.rank(2015, 71, time)
 tag <- c(paste("s", 1:12, sep = ""))
 rank.time.dt(data = tod, tag = tag, time = time)
 
+alpha = seq(0, 1, by = 0.01)
+lvl.set.time(tag = tag, alpha = alpha)
+ks1 <- origin.pair(ref = tag, compare = tag, sig = 0.3, opt = FALSE)
+#------------------------------------------------------------------------
+
+#4-hour period
 time <- "shift6"
 tod <- obs.rank(2015, 71, time)
 tag <- c(paste("s", 1:6, sep = ""))
 rank.time.dt(data = tod, tag = tag, time = time)
 
+alpha = seq(0, 1, by = 0.01)
+lvl.set.time(tag = tag, alpha = alpha)
+ks2 <- origin.pair(ref = tag, compare = tag, sig = 0.3, opt = FALSE)
+#-------------------------------------------------------------------------
+
+#8-hour period
 time <- "shift3"
 tod <- obs.rank(2015, 71, time)
 tag <- c(paste("s", 1:3, sep = ""))
 rank.time.dt(data = tod, tag = tag, time = time)
 
+alpha = seq(0, 1, by = 0.01)
+lvl.set.time(tag = tag, alpha = alpha)
+ks3 <- origin.pair(ref = tag, compare = tag, sig = 0.3, opt = FALSE)
+#-------------------------------------------------------------------------
+
+#12-hour period
 time <- "shift2"
 tod <- obs.rank(2015, 71, time)
 tag <- c(paste("s", 1:2, sep = ""))
 rank.time.dt(data = tod, tag = tag, time = time)
 
-#step 1: create a list of level set results given "tag"
-
 alpha = seq(0, 1, by = 0.01)
 lvl.set.time(tag = tag, alpha = alpha)
-out2 <- NULL
-for (var in tag) {out2 <- rbind(out2, get(paste(var, ".lvl", sep = "")))}
-
-#step 2: compare every combination of .lvl data
-tod.lvl.result <- pair.data(data = data.frame(out2), time = "time", 
-                            tag = tag, var = "pct.events", alpha = 0.05)
-#-------------------------------------------------
-
-
-#=================================
-#--------   md format   ----------
-#=================================
-#---------------------------------
-par(mfrow = c(2, 2), family = "serif", cex.axis = 0.7, 
-    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
-
-plot.new()
-plot.window(xlim = c(0, 1), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
-axis(1);axis(2);
-tag.lvl <- paste(tag, ".lvl", sep = "")
-title(xlab=expression(alpha), ylab="Cumulative % Crashes", cex = 0.7)
-for (var in tag.lvl)
-{tb <- get(var)
-lines(x = tb$alpha, y = tb$pct.events, type = "s", col = which(tag.lvl==var))}
-box(which = "plot")
-legend("bottomright", tag, col = 1:12, lwd = 2, lty = 1)
-
-fig.des <- expression(paste("Figure 3.5: level sets for time of day in various periods", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
+ks4 <- origin.pair(ref = tag, compare = tag, sig = 0.3, opt = FALSE)
+#-------------------------------------------------------------------------
 
 
 
 
 
-#segments binnings (time of day). use tod data (Line 79:97)
-#-----------------------------------------------------------
+#segments binnings with size 1 and 0.5
+#-------------------------------------------------------------
+#2-hour period
+time <- "shift12"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:12, sep = ""))
 xlim <- c(0, ceiling(max(tod$Logmile))+1)
+
+#2-hour period
+#binnings using level sets with size 1
+#-------------------------------------------------------------
 brks <- seq(0, xlim[2], by = 1)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod12bin1 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+
+#2-hour period
+#binnings using level sets with size 0.5
+#-------------------------------------------------------------
 brks <- seq(0, xlim[2], by = 0.5)
-tag.bin <- paste(tag, ".bin", sep = "")
-tag.bin.lvl <- paste(tag.bin, ".lvl", sep = "")
-
-bin2rank.time(data = tod, time = time, tag = tag.bin, brks = brks)
-tod.bin <- NULL
-for (var in tag.bin)
-{tod.bin <- rbind(tod.bin, get(var))}
-lvl.set.time(tag = tag.bin, alpha = seq(0, 1, by = 0.01))
-#------------------     markdown format     -------------------
-par(mfrow = c(2, 2), family = "serif", cex.axis = 0.7, 
-    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
-
-plot.new()
-plot.window(xlim = c(1, max(tod.bin$rank)), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
-axis(1);axis(2);
-title(xlab="Ordered bins", ylab="Cumulative % Crashes", cex = 0.7)
-for (var in tag.bin)
-{tb <- get(var)
-lines(x = tb$rank, y = cumsum(tb$p), type = "s", col = which(tag.bin==var))}
-box(which = "plot")
-legend("bottomright", tag, col = 1:length(tag.bin), lwd = 2, lty = 1)
-
-plot.new()
-plot.window(xlim = c(0, 1), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
-axis(1);axis(2);
-title(xlab=expression(alpha), ylab="Cumulative % Crashes", cex = 0.7)
-for (var in tag.bin.lvl)
-{tb <- get(var)
-lines(x = tb$alpha, y = tb$pct.events, type = "s", col = which(tag.bin.lvl==var))}
-box(which = "plot")
-legend("bottomright", tag, col = 1:length(tag.bin), lwd = 2, lty = 1)
-
-fig.des <- expression(paste("Figure 3.11: ordered bins with bin size = 1 and 0.5 for time of day in 12 shifts", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-#-----------------------------------------------------------
-
-
-#ks table for time of day with binning results
-#------------------------------------------------------------
-out4 <- NULL
-for (var in tag.bin.lvl)
-{out4 <- rbind(out4, get(var))}
-tod.lvl.result2 <- pair.data(data = data.frame(out4), time = "time", 
-                             tag = tag, var = "pct.events", alpha = 0.05)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod12bin0.5 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+#-------------------------------------------------------------
 #-------------------------------------------------------------
 
-
-
-
-#based on survillance plots and KS results:
-#combine some shifts with similar pattern and use as a model
-#to predict the rest shifts
-#(use original segments, without binning)
-#run line 79:82, 84:87, 89:92, 94:97 for each divisions, to get data
-#-------------------------------------------------------------------
-#1. 12 shifts (2h): s7~s9
-tod.same <- rbind(s7, s8, s9) %>% select(Logmile, n) %>% 
-  group_by(Logmile) %>% summarise(n = sum(n)) %>% 
-  mutate(rank = frank(-n, ties.method = "dense"))
-
-tod.mod <- data2pred(ref = tod.same, compr = s1, "Logmile")
-for (var in tag[!(tag==c("s7", "s8", "s9"))])
-{
-  tod.mod <- cbind(tod.mod, 
-                   data2pred(ref = tod.same, compr = get(var), "Logmile")[,-1])
-}
-colnames(tod.mod) <- c("ref.rank", "s1", "s1.n", "s2", "s2.n", 
-                       "s3", "s3.n", "s4", "s4.n", "s5", "s5.n",
-                       "s6", "s6.n", "s10", "s10.n", "s11", "s11.n",
-                       "s12", "s12.n")
-
-#2. 6 shifts (4h): s2~s5
-tod.same <- rbind(s2, s3, s4, s5) %>% select(Logmile, n) %>% 
-  group_by(Logmile) %>% summarise(n = sum(n)) %>% 
-  mutate(rank = frank(-n, ties.method = "dense"))
-
-tod.mod <- data2pred(ref = tod.same, compr = s1, "Logmile")
-for (var in "s6")
-{
-  tod.mod <- cbind(tod.mod, 
-                   data2pred(ref = tod.same, compr = get(var), "Logmile")[,-1])
-}
-colnames(tod.mod) <- c("ref.rank", "s1", "s1.n",
-                       "s6", "s6.n")
-
-#3. 3 shifts (8h): s2~s3
-tod.same <- rbind(s2, s3) %>% select(Logmile, n) %>% 
-  group_by(Logmile) %>% summarise(n = sum(n)) %>% 
-  mutate(rank = frank(-n, ties.method = "dense"))
-
-tod.mod <- data2pred(ref = tod.same, compr = s1, "Logmile")
-colnames(tod.mod) <- c("ref.rank", "s1", "s1.n")
-
-#========================================
-#--------    markdown format    ---------
-#========================================
-tod.y <- seq(2, 18, by = 2) #12 shifts (2h)
-tod.y <- c(2, 4) #6 shifts (4h)
-tod.y <- c(2) #3 shifts (8h)
-
-par(mfrow = c(2, 2), family = "serif", cex.axis = 0.7, 
-    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
-
-plot.new()
-plot.window(xlim = range(tod.same$rank), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
-axis(1);axis(2);
-title(xlab="Reference rank", ylab="Match rate", cex = 0.7)
-matlines(x = tod.mod[,1], y = tod.mod[,tod.y])
-box(which = "plot")
-
-legend("bottomright", tag[!(tag==c("s7", "s8", "s9"))], col = 1:9, lwd = 2) #12 shifts (2h)
-legend("bottomright", c("s1", "s6"), col = 1:2, lwd = 2) #6 shifts (4h)
-legend("bottomright", c("s1"), lwd = 2) #3 shifts (8h)
-
-fig.des <- expression(paste("Figure 3.18: Predictive performace under various divisions: 2-hour, 4-hour and 8-hour shifts", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-#-----------------------------------------------------------------
-
-
-
-
-
-
-#combine some shifts with similar pattern and use as a model
-#to predict the rest shifts
-#(use original segments, without binning)
-#run line 79:82, 84:87, 89:92, 94:97 for each divisions, to get data
-#-------------------------------------------------------------------
-#1. (data: 79:82): 12 shifts (2h), (1, 4:9, 12) (similar) -> model 
+#4-hour period
+time <- "shift6"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:6, sep = ""))
 xlim <- c(0, ceiling(max(tod$Logmile))+1)
-brks <- seq(0, xlim[2], by = 1) #bin size = 1
-brks <- seq(0, xlim[2], by = 0.5) #bin size = 0.5
 
-grp <- c(1, 4:9, 12) #bin size = 1
-grp <- c(3:12) #bin size = 0.5
+#4-hour period
+#binnings using level sets with size 1
+#-------------------------------------------------------------
+brks <- seq(0, xlim[2], by = 1)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod6bin1 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+
+#4-hour period
+#binnings using level sets with size 0.5
+#-------------------------------------------------------------
+brks <- seq(0, xlim[2], by = 0.5)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod6bin0.5 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+
+#8-hour period
+time <- "shift3"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:3, sep = ""))
+xlim <- c(0, ceiling(max(tod$Logmile))+1)
+
+#8-hour period
+#binnings using level sets with size 1
+#-------------------------------------------------------------
+brks <- seq(0, xlim[2], by = 1)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod3bin1 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+
+#8-hour period
+#binnings using level sets with size 0.5
+#-------------------------------------------------------------
+brks <- seq(0, xlim[2], by = 0.5)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod3bin0.5 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+
+#12-hour period
+time <- "shift2"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:2, sep = ""))
+xlim <- c(0, ceiling(max(tod$Logmile))+1)
+
+#12-hour period
+#binnings using level sets with size 1
+#-------------------------------------------------------------
+brks <- seq(0, xlim[2], by = 1)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod2bin1 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+
+#12-hour period
+#binnings using level sets with size 0.5
+#-------------------------------------------------------------
+brks <- seq(0, xlim[2], by = 0.5)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
+lvl.set.time(tag = tag, alpha = seq(0, 1, by = 0.01))
+ks.tod2bin0.5 <- origin.pair(ref = tag, compare = tag, var = "breaks", sig = 0.3, opt = TRUE)
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+
+#=============================================================
+
+
+
+
+#use "may", "jun", "jul" as reference to test other days
+#test % matched segments under level sets
+#--------------------------------------------------------
+
+#2-hour periods
+time <- "shift12"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:12, sep = ""))
+rank.time.dt(data = tod, tag = tag, time = time)
+lvl.set.time(tag = tag, alpha = alpha)
+
+tod3.mod <- data2pred(ref = tag[3], compare = tag[-3])
+tod5.mod <- data2pred(ref = tag[5], compare = tag[-5])
+tod6.mod <- data2pred(ref = tag[6], compare = tag[-6])
+tod7.mod <- data2pred(ref = tag[7], compare = tag[-7])
+tod8.mod <- data2pred(ref = tag[8], compare = tag[-8])
+tod10.mod <- data2pred(ref = tag[10], compare = tag[-10])
+tod11.mod <- data2pred(ref = tag[11], compare = tag[-11])
+
+par(mfrow=c(4,2),family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+for (i in c(3,5,6,7,8,10,11))
+{
+  plot.new()
+  plot.window(xlim = range(alpha), ylim = c(0, 1))
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2);title(main = toupper(tag[i]), xlab = expression(alpha), ylab = "Matched rate")
+  matlines(x = get(paste("tod",i,".mod",sep=""))$alpha, 
+           y = get(paste("tod",i,".mod",sep=""))[,-1], col = 1:11, type = "s")
+  box(which = "plot")
+  legend("bottomright", tag[-i], col = 1:11, lty = 1, bty = "n")
+}
+#-------------------------------------------------------------
+
+#4-hour periods
+time <- "shift6"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:6, sep = ""))
+rank.time.dt(data = tod, tag = tag, time = time)
+lvl.set.time(tag = tag, alpha = alpha)
+
+tod1.mod <- data2pred(ref = tag[1], compare = tag[-1])
+
+par(family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+plot.new()
+plot.window(xlim = range(alpha), ylim = c(0, 1))
+grid(nx = NULL, ny = NULL, col = "lightgray")
+axis(1);axis(2);title(main = toupper(tag[1]), xlab = expression(alpha), ylab = "Matched rate")
+matlines(x = tod1.mod$alpha, 
+         y = tod1.mod[,-1], col = 1:5, type = "s")
+box(which = "plot")
+legend("bottomright", tag[-1], col = 1:5, lty = 1, bty = "n")
+#--------------------------------------------------------------
+
+#8-hour periods
+time <- "shift3"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:3, sep = ""))
+rank.time.dt(data = tod, tag = tag, time = time)
+lvl.set.time(tag = tag, alpha = alpha)
+
+tod1.mod <- data2pred(ref = tag[1], compare = tag[-1])
+tod2.mod <- data2pred(ref = tag[2], compare = tag[-2])
+tod3.mod <- data2pred(ref = tag[3], compare = tag[-3])
+
+par(mfrow = c(2,2), family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+for (i in 1:3)
+{
+  plot.new()
+  plot.window(xlim = range(alpha), ylim = c(0, 1))
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2);title(main = toupper(tag[i]), xlab = expression(alpha), ylab = "Matched rate")
+  matlines(x = get(paste("tod",i,".mod",sep=""))$alpha, 
+           y = get(paste("tod",i,".mod",sep=""))[,-1], col = 1:2, type = "s")
+  box(which = "plot")
+  legend("bottomright", tag[-i], col = 1:2, lty = 1, bty = "n")
+}
+#--------------------------------------------------------------
+
+#12-hour periods
+time <- "shift2"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:2, sep = ""))
+rank.time.dt(data = tod, tag = tag, time = time)
+lvl.set.time(tag = tag, alpha = alpha)
+
+tod1.mod <- data2pred(ref = tag[1], compare = tag[-1])
+tod2.mod <- data2pred(ref = tag[2], compare = tag[-2])
+
+par(mfrow = c(1,2), family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+for (i in 1:2)
+{
+  plot.new()
+  plot.window(xlim = range(alpha), ylim = c(0, 1))
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2);title(main = toupper(tag[i]), xlab = expression(alpha), ylab = "Matched rate")
+  matlines(x = get(paste("tod",i,".mod",sep=""))$alpha, 
+           y = get(paste("tod",i,".mod",sep=""))[,-1], type = "s")
+  box(which = "plot")
+  legend("bottomright", tag[-i], lty = 1, bty = "n")
+}
+#--------------------------------------------------------------
+
+
+
+
+#test % matched segments under level sets
+#2-hour periods
+#size 1, "18:00-20:00" as model ----------------------------------------------------
+time <- "shift12"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:12, sep = ""))
 
 bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
 
-tod.bin <- NULL
-for (var in tag[grp])
-{tod.bin <- rbind(tod.bin, get(var))}
+lvl.set.time(tag = tag, alpha = alpha)
+tod10.mod <- data2pred(ref = tag[10], compare = tag[-10], var = "breaks")
 
-tod.bin <- tod.bin %>% select(breaks, counts) %>% 
-  group_by(breaks) %>% summarise(n = sum(counts)) %>% 
-  mutate(rank = frank(-n, ties.method = "dense"))
+par(family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+for (i in 10)
+{
+  plot.new()
+  plot.window(xlim = range(alpha), ylim = c(0, 1))
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2);title(main = tag[i], xlab = expression(alpha), ylab = "Matched rate")
+  matlines(x = get(paste("tod",i,".mod",sep=""))$alpha,
+           y = get(paste("tod",i,".mod",sep=""))[,-1], col = 1:11, type = "s")
+  box(which = "plot")
+  legend("bottomright", tag[-i], col = 1:11, lty = 1, bty = "n") 
+}
 
-tod.mod <- data2pred(ref = tod.bin, compr = get(tag[-grp][1]), "breaks")
-for (var in tag[-grp][-1])
-{tod.mod <- cbind(tod.mod, 
-                  data2pred(ref = tod.bin, compr = get(var), "breaks")[,-1])}
+#4-hour periods
+#size 1, "08:00-12:00" as model ----------------------------------------------------
+time <- "shift6"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:6, sep = ""))
 
-colnames(tod.mod) <- c("ref.rank", "s2", "s2.n", "s3", "s3.n", 
-                       "s10", "s10.n", "s11", "s11.n") #bin size = 1
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
 
-colnames(tod.mod) <- c("ref.rank", "s1", "s1.n", "s2", "s2.n") #bin size = 0.5
+lvl.set.time(tag = tag, alpha = alpha)
+tod3.mod <- data2pred(ref = tag[3], compare = tag[-3], var = "breaks")
 
-#2. (data: 84:87, 275:282): 6 shifts (4h), (1, 3:5) (similar) -> model
-grp <- c(1, 3:5) #bin size = 1
-grp <- c(1:6) #bin size = 0.5
+par(family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+for (i in 3)
+{
+  plot.new()
+  plot.window(xlim = range(alpha), ylim = c(0, 1))
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2);title(main = tag[i], xlab = expression(alpha), ylab = "Matched rate")
+  matlines(x = get(paste("tod",i,".mod",sep=""))$alpha,
+           y = get(paste("tod",i,".mod",sep=""))[,-1], col = 1:5, type = "s")
+  box(which = "plot")
+  legend("bottomright", tag[-i], col = 1:5, lty = 1, bty = "n") 
+}
 
-#for bin size = 0.5
-tod.mod <- data2pred(ref = tod.bin, compr = get(tag[grp][1]), "breaks")
-for (var in tag[grp][-1])
-{tod.mod <- cbind(tod.mod, 
-                  data2pred(ref = tod.bin, compr = get(var), "breaks")[,-1])}
+#8-hour periods
+#size 1, "08:00-16:00", "16:00-24:00" as model -------------------------------------
+time <- "shift3"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:3, sep = ""))
 
-colnames(tod.mod) <- c("ref.rank", "s2", "s2.n", "s6", "s6.n") #bin size = 1
-colnames(tod.mod) <- c("ref.rank", "s1", "s1.n", "s2", "s2.n", 
-                       "s3", "s3.n", "s4", "s4.n", "s5", "s5.n",
-                       "s6", "s6.n") #bin size = 0.5
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
 
-#3. (data: 89:92, 275:279): 3 shifts (8h), (use all) (similar) -> model
-grp <- c(1:3) #bin size = 1
-grp <- c(1:3) #bin size = 0.5
+lvl.set.time(tag = tag, alpha = alpha)
+tod2.mod <- data2pred(ref = tag[2], compare = tag[-2], var = "breaks")
+tod3.mod <- data2pred(ref = tag[3], compare = tag[-3], var = "breaks")
 
-#rerun 304:307 for both sizes
-colnames(tod.mod) <- c("ref.rank", "s1", "s1.n", "s2", "s2.n", "s3", "s3.n")
+par(mfrow=c(1,2), family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+for (i in 2:3)
+{
+  plot.new()
+  plot.window(xlim = range(alpha), ylim = c(0, 1))
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2);title(main = tag[i], xlab = expression(alpha), ylab = "Matched rate")
+  matlines(x = get(paste("tod",i,".mod",sep=""))$alpha,
+           y = get(paste("tod",i,".mod",sep=""))[,-1], col = 1:2, type = "s")
+  box(which = "plot")
+  legend("bottomright", tag[-i], col = 1:2, lty = 1, bty = "n") 
+}
 
-#========================================
-#--------    markdown format    ---------
-#========================================
-tod.y <- c((1:length(tag[-grp])*2))
-tod.y <- c((1:length(tag[grp])*2)) #for 6 shifts size 0.5, for 3 shifts both sizes
+#12-hour periods
+#size 1, "12:00-24:00" as model ----------------------------------------------------
+time <- "shift2"
+tod <- obs.rank(2015, 71, time)
+tag <- c(paste("s", 1:2, sep = ""))
 
-par(mfrow = c(3, 2), family = "serif", cex.axis = 0.7, 
-    mar = c(4, 4, 1, 1), oma = c(2, 0, 0, 0), las = 1)
+bin2rank.time(data = tod, time = time, tag = tag, brks = brks)
 
-plot.new()
-plot.window(xlim = range(tod.bin$rank), ylim = c(0, 1))
-grid(nx = NULL, ny = NULL, col = "lightgray")
-axis(1);axis(2);
-title(xlab="Reference rank", ylab="Match rate", cex = 0.7)
-matlines(x = tod.mod[,1], y = tod.mod[,tod.y], col = 1:length(tod.y))
-box(which = "plot")
+lvl.set.time(tag = tag, alpha = alpha)
+tod2.mod <- data2pred(ref = tag[2], compare = tag[-2], var = "breaks")
 
-legend("bottomright", tag[-grp], col = 1:length(tod.y), lwd = 2)
-legend("bottomright", tag[grp], col = 1:length(tod.y), lwd = 2) #for 6 shifts size 0.5, for 3 shifts borth sizes
-
-fig.des <- expression(paste("Figure 3.22: Various divisions with bin size 1 and 0.5:",
-                            " 2-hour, 4-hour and 8-hour shifts ", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-#-----------------------------------------------------------------
-
-
-
-
-#only consider top 10% of segments
-#---------------------------------
-#find % matched segments for every combination of "tag"
-#(ex. 00-02 - 02-04, 00-02 - 04-06, 00-02 - 04-06, ...)
-#-------------------------------------------------------
-
-#alpha <- 0.05
-#tag <- c(paste("s", 1:12, sep = ""))
-#lvl.set.time(tag = tag, alpha = alpha)
-#out3 <- NULL
-#for (var in tag) {out3 <- rbind(out2, get(paste(var, ".lvl", sep = "")))}
-#pair.match(tag = tag, alpha = alpha)
+par(family = "serif", cex.axis = 0.7, mar = c(4, 4, 2, 1),
+    las = 1, oma = c(1, 0, 0, 0))
+for (i in 2)
+{
+  plot.new()
+  plot.window(xlim = range(alpha), ylim = c(0, 1))
+  grid(nx = NULL, ny = NULL, col = "lightgray")
+  axis(1);axis(2);title(main = tag[i], xlab = expression(alpha), ylab = "Matched rate")
+  matlines(x = get(paste("tod",i,".mod",sep=""))$alpha,
+           y = get(paste("tod",i,".mod",sep=""))[,-1], type = "s")
+  box(which = "plot")
+  legend("bottomright", tag[-i], lty = 1, bty = "n") 
+}
