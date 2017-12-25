@@ -1,6 +1,8 @@
 ---
 title: 'Predictability of Crash Modelling From the Data with Improved Quality Using Level Sets Surveillance System'
 output: pdf_document
+geometry: "left=2cm,right=2cm,top=2cm,bottom=2cm"
+fig_caption: yes
 ---
 
 ```{r setup, include = FALSE}
@@ -8,471 +10,759 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(dplyr)
 library(bda)
 library(knitr)
-library(kableExtra)
 library(data.table)
+library(kableExtra)
 ```
 
-#1. Introduction
+\section{1. Introduction}\label{sec1}
 <build up scenario for problems, and summarize contents of section 2 and 3>
 
-#2. Evaluation Methodology
-<describe how we evaluate data, the method, the process under different scenarios> 
+\section{2. Evaluation Methodology}\label{sec2}
+Instead of going through traditional procedure of building statistical models such as negative-binomial and Poisson regression, couple useful concepts and tools of evaluating data before model building are introduced and modified to meet the need for the mothodology in this paper. These concepts include the level sets (\hyperref[sec21]{Section 2.1}), surveillance plots (\hyperref[sec22]{Section 2.2}), the Jaccard Index (\hyperref[sec23]{Section 2.3}) and Kolmogorov-Smirnov test (\hyperref[sec24]{Section 2.4}) and will be illustrated with a dataset from highway data in this order of comcepts.
 
-##2.1 Level sets
-
-Level set methods are widely used in image segmentations and processing. One of its applciations is for pattern recognitions and shape reconstructions. Instead of continuous and multidimentional space, same implementation of level set method is used as a measure of pattern recognitions for discrete space crashes analysis in this study.
+\subsection{2.1 Level sets}\label{sec21}
+Level sets methods are widely used in image segmentations and processing, one of its applciations is for pattern recognitions and shape reconstructions. Instead of continuous and multidimentional space, same implementation of level sets is used as a measure of pattern recognitions for discrete space crashes analysis in this study (\cite{ref1} and \cite{ref2}).
 
 Let $X$ be highway segments, $S_X$ be the support of $X$, $f(x)$ be the density of crashes at segment $X = x$, such that $\sum_{S_X} f(x) = 1$ (discrete spatial points). $\alpha$ is the top proportion of segments expected to be monitored. Then, the level set is defined as:
 
-<center> $\gamma = \{ x \in \Omega |  f(x) \ge c \}$ </center>
+\begin{equation}
+  \gamma = \{ x \in \Omega |  f(x) \ge c \}
+  \label{eq:1}
+\end{equation}
 
-where $\gamma$ is the set of segments $x$'s that $f(x) \ge c$, $c$ is a threshold satisfying $\underset{c}{\operatorname{inf}} \frac{\| \gamma \|}{\| S_X \|} \le \alpha$ and $c$ can be determined as $\underset{x \in \gamma}{\operatorname{min}}f(x)$.
+where $\gamma$ is the set of segments $x$'s that $f(x) \ge c$, $c$ is a threshold that satisfies $\underset{c}{\operatorname{inf}} \frac{\| \gamma \|}{\| S_X \|} \le \alpha$ and $c$ can be determined as $\underset{x \in \gamma}{\operatorname{min}}f(x)$.
 
-Some drawbacks of using level set methods in discrete space data are such as approximation of desired levels and solution to the ties with the same rates. Considering these two main issues in this study, level $\hat{\alpha}$ of sample is contraint on the proportion of highway segments that is closer to desired $\alpha$ but not greater than $\alpha$. Since same ranks represent that crashes are equally likely to happen to these tied segments, ties should be all inclusive or exclusive in our desired set as the level changes. These two issues are under control with two general approaches mentioned previously. Figure 2.1 showed below demonstrates a comparison of crashes given different time periods under a level set method with $\alpha =$ 0.05 using highway data from Route 71, 2015. X-axis is the location ($x$ = Logmile) on this route whereas y-axis represents proportion of crashes $f(x)$. Threshold, $c$, (grey line) is set to be the minimal crash rate in the desired set $\gamma$. The true $\alpha$ levels for weekdays and weekend data are 0.0481 and 0.0377 with thresholds 0.0032 and 0.0039 repectively. 88 highway segments out of 1729 (or with a proportion of 0.0481) on route 71 with a crash rate equal or greater than 0.0032 approximately meets the desired level $\alpha =$ 0.05 for weekdays; similarily, 69 out of total 1729 segments on route 71 with a threshold equal or over 0.0039 satisfies this scenario. 
-This setting is in a aspect of concertrating resources, say 0.05 in this example, and focusing on few highway segments with higher chance of having crashes with efficiency. 
+Some drawbacks of using level sets in discrete space data are such as approximation of desired levels and solution to the ties with the same rates. Considering these two main issues in this study, level $\hat{\alpha}$ of sample is contraint on the proportion of highway segments that is closer to desired $\alpha$ but not greater than $\alpha$. Since same ranks represent that crashes are equally likely to happen to these tied segments, ties should be all inclusive or exclusive in our desired set as the level changes. These two issues are under control with two general approaches mentioned previously. Figure \ref{fig:fig1} demonstrates a comparison of crashes given different time periods under level sets with $\alpha = 0.05$ using highway data from Route 71, 2015. X-axis is the location ($x$ = Logmile) on this route whereas y-axis represents proportion of crashes $f(x)$. Threshold, $c$, (gray line) is set to be the minimal crash rate in the desired set $\gamma$. The true $\alpha$ levels for weekdays and weekend data are 0.0481 and 0.0377 with thresholds 0.0032 and 0.0039 repectively. 88 highway segments out of 1729 (or with a proportion of 0.0481) on route 71 with a crash rate equal or greater than 0.0032 approximately meets the desired level $\alpha =$ 0.05 for weekdays; similarily, 69 out of total 1729 segments on route 71 with a threshold equal or over 0.0039 satisfies this scenario.
+This setting is in a aspect of concertrating resources, say 0.05 in this example, and focusing on few highway segments with higher chance of having crashes with efficiency.
 
-<center>
+```{r, fig.align='center',fig.cap="\\label{fig:fig1}weekdays (a) and weekend (b) with $\\alpha$ = 0.05"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", c(14:41))
+```
+
+\subsection{2.2 Surveillance plots}\label{sec22}
+Surveillance systems are built in respect of monitoring and capturing certain aberrations in the current or future process of tendency. These systems can be applied for detecting potential outbreak of epidemiological disease, and in essense used for evaluation of certain factors and profiles to acheive infection control in healthcare (\cite{ref3} and \cite{ref4}).
+
+In conjuction with level sets, surveillance plots provide visualization of screening spatiotemporal highway data from distinct perspectives of monitoring crashes along highway segments. Under limited resources, say manpower, 10% or less of highway segments with the highest crash rates may be considered high priority and regularly kept under surveillance (fixed allocation based surveillance). Also, highway segments with a target percentage of crashes can also be determined and adjusted to capture different proportion of segments under various conditions (threshold based surveillance). Considering time influence, distributions of crashes can be expected either similiar or dissimilar. To observe and build up scenarios as described above, surveillance plots are essential to extend further exploratory and predictive analysis.
+
+\subsubsection{2.2.1 Fixed allocation based surveillance}\label{sec221}
+The following is an example of fixed allocation based surveillance plots in two distinct way of presenting. Same data used for Figure \ref{fig:fig1} is also implemented in this example. Instead of single $\alpha$ level is observed in Figure \ref{fig:fig1}, a sequence of $\alpha$ levels (from 0 to 1 with a increment of 0.01) are now concerned and showed in Figure \ref{fig:fig2}. For (a) and (b), y-axis represents a cumulative proportion of crashes, and x-axis individually represents cumulative ordered segments size by crashes and top proportion of segments expected to be monitored, which is $\alpha$. The following paragraphs will describe this figure in detail.
+
+```{r fig.align='center',fig.cap="\\label{fig:fig2}surveillance plots for weekdays and weekend under distinct perspectives $\\alpha$ levels"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", c(54:99))
+```
+
+Table \ref{tab:tab1} is obtained with arrangement by order and shows the composition for \ref{fig:fig2} (a). *diff* is the difference between each segments; *rank* is ranked by proportion of crashes in individual segments; *p* is proportion of crashes in individual segments; *Log.size* and *log.rate* are the sum of *diff* and *p* with the same ranked segments respectively (e.g. in *rank* = 7, 4 segments are tied, therefore with a *log.size* = *diff* $\times$ 4 = 0.0078 and *log.rate* = *p* $\times$ 4 = 0.0145, since the *diff* is all equal on route 71). It is plotted cumulative segmental differences versus cumulative proportion of crashes in ordered segments, and readible to see the surveillance under different desired lengths of highway.
+
+Figure \ref{fig:fig2} (b), in analog of Figure \ref{fig:fig2} (a), will be showed simultaneously in the parentheses. The gray vertical line is the desired length of highway, top 6.26 *Logmile* (or $\alpha =$ 0.18) being under surveillance. Under this scenario, 82.26% and 86.92% of total crashes will be primarily on top 6.26 *Logmile* (or top 18% of total segments) for weekdays and weekend respectively.
+
 ```{r}
-load("~/wk_wkd.RData")
-source_lines("wk_wkd.R", 14:44)
-```
-</center>
-
-https://link-springer-com.libdata.lib.ua.edu/book/10.1007%2F978-3-642-15352-5  
-https://link-springer-com.libdata.lib.ua.edu/book/10.1007%2F978-3-319-01712-9  
-
-##2.2 Surveillance plots
-Surveillance systems are built in respect of monitoring and capturing certain aberrations in the current or future process of tendency. These systems can be applied for detecting potential outbreak of epidemiological disease, and in essense used for evaluation of certain factors and profiles to acheive infection control in healthcare.
-
-In conjuction with level set method, surveillance plots provide visualization of screening spatiotemporal highway data from distinct perspectives of monitoring crashes along highway segments. Under limited resources, say manpower, 10% or less of highway segments with the highest crash rates may be considered high priority and regularly kept under surveillance (fixed allocation based surveillance). Also, highway segments with a target percentage of crashes can also be determined and adjusted to capture different proportion of segments under various conditions (threshold based surveillance). Considering time influence, distributions of crashes can be expected either similiar or dissimilar. To observe and build up scenarios as described above, surveillance plots are essential to extend further exploratory and predictive analysis.
-
-http://www.sciencedirect.com/science/article/pii/S187603411730206X  
-http://www.sciencedirect.com/science/article/pii/S2093791116300610
-
-###2.2.1 Fixed allocation based surveillance
-The following is an example of fixed allocation based surveillance plots in two distinct way of presenting. Same data used for Figure 2.1 is also implemented in this example. Instead of single $\alpha$ level is observed in Figure 2.1, a sequence of $\alpha$ levels (from 0 to 1 with a increment of 0.01) are now concerned and showed in Figure 2.2. For (a) and (b), y-axis represents a cumulative proportion of crashes, and x-axis individually represents cumulative ordered segments size by crashes and top proportion of segments expected to be monitored, which is $\alpha$. The following paragraphs will describe this figures in detail.
-
-<center>
-```{r}
-load("~/wk_wkd.RData")
-source_lines("G:/caps/wk_wkd.R", c(54:57, 63, 66:67, 72:76, 82:83, 93:121))
-```
-</center>
-
-Table 2.1 is obtained with arrangement by order and shows the composition for Figure 2.2 (a). *diff* is the difference between each segments; *rank* is ranked by proportion of crashes in individual segments; *p* is proportion of crashes in individual segments; *Log.size* and *log.rate* are the sum of *diff* and *p* with the same ranked segments respectively (e.g. in *rank* = 7, 4 segments are tied, therefore with a *log.size* = *diff* $\times$ 4 = 0.0078 and *log.rate* = *p* $\times$ 4 = 0.0145, since the *diff* is all equal on route 71). It is plotted cumulative segmental differences versus cumulative proportion of crashes in ordered segments, and readible to see the surveillance under different desired lengths of highway.
-
-Figure 2.2 (b), in analog of Figure 2.2 (a), will be showed simultaneously in the parentheses. The grey vertical line is the desired length of highway, top 6.26 *logmile* (or $\alpha =$ 0.18) being under surveillance. Under this scenario, 82.26% and 86.92% of total crashes will be primarily on top 6.26 *logmile* (or top 18% of total segments) for weekdays and weekend respectively.
-
-```{r echo = FALSE, warning = FALSE, message = FALSE}
-kable(head(z3, 10), caption = "Table 2.1: Partial output for Figure 2.2 (a)")
+kable(head(z3, 10), caption = "\\label{tab:tab1}Partial output for Figure 2.2 (a)")
 ```
 
-###2.2.2 Threshold based surveillance
-Figure 2.3 shows an example of threshold based surveillance plot for weekdays and weekend. Y-axis is the proportion of segments above a given threshold whereas x-axis is desired threshold, which is the crash rate on a segment. Grey line is set to be a desired threshold 0.0019. 9.62% and 10.99% (or 176 and 201 segments) of total segments of their crash rates will be above a desired threshold of 0.0019 repectively. In comparison with fixed allocation based surveillance, it is also flexible to set up a desired threshold *c* instead of a desired proportion of segments $\alpha$ to be monitored.
+\subsubsection{2.2.2 Threshold based surveillance}\label{sec222}
+Figure \ref{fig:fig3} shows an example of threshold based surveillance plot for weekdays and weekend. Y-axis is the proportion of segments above a given threshold whereas x-axis is desired threshold, which is the crash rate on a segment. Gray line is set to be a desired threshold 0.0019. 9.62% and 10.99% (or 176 and 201 segments) of total segments of their crash rates will be above a desired threshold of 0.0019 repectively. In comparison with fixed allocation based surveillance, it is also flexible to set up a desired threshold *c* instead of a desired proportion of segments $\alpha$ to be monitored.
 
 Unlike the implementation of fixed allocation based surveillance, threshold based surveillance is directly built from raw data instead of ranking data first. Under a set of threshold based surveillance segments, this is a problem of giving priority to individual segment since no distinction shows beyond the entire set. Both systems have their own disadvantages and advantages; simultaneously using two systems provides an improved aspect of measuring the quality of data to set up a comparatively optimal cut-off point for surveillance.
 
-<center>
-```{r}
-load("~/wk_wkd.RData")
-source_lines("G:/caps/wk_wkd.R", 127:150)
+```{r fig.align='center',fig.cap="\\label{fig:fig3}threshold based surveillance for weekdays and weekend"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", c(108:129))
 ```
-</center>
 
-##2.3 Kolmogorov-Smirnov test
-In analog of parametric method, *Q-Q* plots or *P-P* plots for assessing normality use quantile and percentile statistics to compare the magnitude of deviations between estimated and hypothetical distributions. Kolmogorov-Smirnov test (KS test) is a common nonparametric method to evaluate the goodness of fit between estimated and hypothetical distribution. For two-sample KS test, two random samples are compared to observe magnitude of differences based on their distributions. The primary approach of finding estimated distribution of a random variable is empirical cumulative distribution function (*ecdf*) or empirical distribution function (*edf*). An *ecdf* $S_n(x)$ is defined as:
+\subsection{2.3 Jaccard Index plot}\label{sec23}
+The Jaccard Index, or Jaccard similarity coefficient was introduced by Paul Jaccard and use as a measure of similarity of data \cite{ref5}. The Jaccard Index can be also extended to a Jaccard distance for measure of similarity in multidimensional space. Suppose two samples are drawn, it is defined as a fraction of intersection and union sets of two samples.
 
-$$S_n(x) = \sum_{i=1}^{n}{\textbf{I}(x_i \le x)}/n$$
+\begin{equation}J(A, B) = \frac{\| A \cap B \|}{\| A \cup B \|}\label{eq:2}\end{equation}
+
+where $A$ and $B$ represent two samples, $\|  \cdot \|$ is the size of a sample.  
+
+In this paper similar idea of Jaccard Index is used but in a conditional structure. It is defined as the following:
+
+\begin{equation}J^{*}(A, B) = \frac{\| A \cap B \|}{\| A \|}\label{eq:3}\end{equation}
+
+where $J^{*}(A, B)$ is conditioning on $A$. The diversity of sets $A$ and $B$ can be observed by comparing $J^{*}(A, B)$ and $J^{*}(B, A)$. The indexes should be close if both sets are similar, and vice versa.
+
+Figure \ref{fig:fig4} shows the cumulative crash rate in original segments using (\ref{eq:3}). In \ref{fig:fig4} on the left, the black line is the exact cumulative crash rate on weekdays whereas the blue line is the cumulative crash rate with matched segments using reference weekdays, and right side shows the opposite condition. 
+
+```{r fig.align='center',fig.cap="\\label{fig:fig4}Comparison for weekdays and weekend using $J^{*}$ Index"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", 144:167)
+```
+
+Based on the adjustment (\ref{eq:3}), $J^{*}$ can be calculated under a sequence of $\alpha$ levels is showed in Figure \ref{fig:fig5}. On the right of Figure \ref{fig:fig5}, under the same $\alpha$ level, the black line is the true cumulative crash rate in weekdays whereas the blue line shows the cumulative crash rate on weekend with the matched segments in weekdays, and the condition is opposite for the left side of Figure \ref{fig:fig5}.
+
+```{r fig.align='center',fig.cap="\\label{fig:fig5}Comparison for weekdays and weekend under the level sets using $J^{*}$ Index"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", 172:197)
+```
+
+Figure \ref{fig:fig4} and Figure \ref{fig:fig5} demonstrate the relationships of ordered distributions between weekdays and weekend under distinct aspects. Under the level sets setting, it is comparatively objective for comparisons for the reason that sizes of reference and subject are approximately equivalent. Great dissimilarities in distributions of ordered segments may be clearly showed in Figure \ref{fig:fig5}. In the next section, a metric to describe this similarity will be introduced and also served as a measure of quality of data.
+
+\subsection{2.4 Kolmogorov-Smirnov test}\label{sec24}
+In analog of parametric method, *Q-Q* plots or *P-P* plots for assessing normality use quantile and percentile statistics to compare the magnitude of deviations between estimated and hypothetical distributions. Kolmogorov-Smirnov test (KS test) is a common nonparametric method to evaluate the goodness of fit between estimated and hypothetical distribution (\cite{ref6}). For two-sample KS test, two random samples are compared to observe magnitude of differences based on their distributions. The primary approach of finding estimated distribution of a random variable is empirical cumulative distribution function (*ecdf*) or empirical distribution function (*edf*). An *ecdf* $S_n(x)$ is defined as:
+
+\begin{equation}
+  S_n(x) = \sum_{i=1}^{n}{\textbf{I}(x_i \le x)}/n
+  \label{eq:4}
+\end{equation}
 
 where $\textbf{I}(x_i \le x)$ is a indicator function that equals to 1 if $x_i \le x$, and 0 otherwise.
 
 For one-sample KS test $H_0: S_n(x) = F_X(x)$, the $D_n$ statistic is defined as:
 
 \begin{equation}
-D_n = \underset{x}{\operatorname{sup}} |S_n(x) - F_X(x)|
-label{eq:KS}
+  D_n = \underset{x}{\operatorname{sup}} |S_n(x) - F_X(x)|
+  \label{eq:5}
 \end{equation}
-
-REMOVE: See \eqref{eq:KS} 
 
 For two-sample KS test $H_0: S_m(x) = S_n(x)$, the $D_{m,n}$ statistic is defined as:
 
-<center> $D_{m,n} = \underset{x}{\operatorname{max}} |S_m(x) - S_n(x)|$ </center>
+\begin{equation}
+  D_{m,n} = \underset{x}{\operatorname{max}} |S_m(x) - S_n(x)|
+  \label{eq:6}
+\end{equation}
 
 If $D_{m,n} \ge d_0$, where $d_0 = c_{\alpha} \sqrt{\frac{1}{m} + \frac{1}{n}}$, $c_{\alpha}$ values can be found in any nonparametric materials, then $H_0$ is rejected, which implies $S_m(x)$ and $S_n(x)$ are from different distributions. Note that as $n, m \rightarrow \infty$, $c_{\alpha}$ is approximately $\sqrt{-\frac{1}{2} \operatorname{ln} (\frac{\alpha}{2})}$. Approximation of limiting $c_{\alpha}$ will be used for measure of distributions.
 
-In this study, two-sample KS test is primarily conducted as a measure of association between distributions in analog of Least Significant Difference (LSD) for multiple comparisons in parametric methods. This test is contructed based on the snenarios used from a surveillance perspective whereas the surveillance is constructed based on the level set method; therefore, three ways of evaluations of highway data under different scenarios are seemingly distinct but closely tied together to organize a broaden perspecive of highway data structures.
+In this study, two-sample KS test is primarily conducted as a measure of association between distributions in analog of Least Significant Difference (LSD) for multiple comparisons in parametric methods. Instead of calculating the *cdf* in using a raw data, it is done in a ranking way and *cdf* is not based on \ref{eq:4} but summing up the crash rates with the same rank. It is defined as follow:
 
-Jean D. Gibbons, Subhabrata Chakraborti - Nonparametric Statistical Inference 4e (2003)
+\begin{equation}S^{*}_k(y) = \sum_{i=1}^{k}{p(Y \ge y_{(i)})}\label{eq:7}\end{equation}
 
-###2.3.1 Demonstration of conducting KS test
-Recall from section 2.2, surveillance using level set is comparing the proportion of crashes under various $\alpha$ values. Continuing using the same data as examples showed earlier, $S_m(x)$ and $S_n(x)$ are *cdf*'s for weekdays and weekend with same number of $\alpha$ values (*m* = *n* = 101) using level set method repectively. Aussume significance level is 0.05, then, $D_{m,n} =$ 0.085 ($d_0 \approx$ 0.1911) with *p-value* 0.96, and therefore, $H_0: S_m(x) = S_n(x)$ is rejected. This is suggested that two distributions are indistinguishable. It is possible that model based on weekdays might have similar predictability with model based on weekend. Instead of two, one model might be sufficient for prediction and surveillance. 
+where $S^{*}_k(y)$ is the cumulative crash rate, $0 \le S^{*}_k(y) \le 1$; *k* represents the rank; *Y* is the ordered segments and $y_{(i)}$ is the $i^{th}$ segments with the highest crash rate (ties are also considered). Since $y_{(1)}$ determines the maximum, $S^{*}_k(y)$ is showed as a way of survival function. (\ref{eq:7}) is viewed as foundation of the level sets applied in KS test.
 
-The purpose of conducting a KS test on a fixed allocation based surveillance is that patterns of the top desired percentage of total segments for compared distributions are intrigued instead of the entire original highway patterns. In ordered segments, unnecessary segments can be easily discarded (beyond a $\alpha$ level), and the desired set (within $\alpha$ level) can be used to construct merely one model to predict weekdays and weekend patterns with better performance and precision. Using this procedure, model complexity and performance can both be ideally achieved.
+A modified KS test using (\ref{eq:7}) is contructed based on the snenarios used from a surveillance perspective using the level sets; therefore, this is viewed as a solid metric to determine the diversity in distributions under different scenarios.  
 
-##2.4 Jaccard Index plot
-The Jaccard Index, or Jaccard similarity coefficient was introduced by Paul Jaccard and use as a measure of similarity of data. The Jaccard Index can be also extended to a Jaccard distance for measure of similarity in multidimensional space. General intersection-uion relationship will be applied in this paper. Suppose two samples are drawn, it is defined as a fraction of intersection and union sets of two samples.
+\subsubsection{2.4.1 Demonstration of conducting KS test}\label{sec241}
+Recall from \hyperref[sec22]{Section 2.2}, surveillance using level sets is comparing the proportion of crashes under various $\alpha$ values. Continuing using the same data as examples showed earlier, $S^{*}_m(x)$ and $S^{*}_n(x)$ are *cdf*'s for weekdays and weekend with same number of $\alpha$ values (*m* = *n* = 101) using level sets repectively (see Figure \ref{fig:fig5}). Aussume significance level is 0.05, then, $D_{week} = 0.1631$ and $D_{weekend} = 0.2229$ ($d_0 \approx 0.1911$) with *p-value* 0.1364 and 0.0132 (Figure \ref{fig:fig6})
 
-<center> $J(A, B) = \frac{\| A \cap B \|}{\| A \cup B \|}$, where $A$ and $B$ represent two samples, $\|  \cdot \|$ is the size of a sample. </center>  
-
-Jaccard, Paul (1912), The distribution of the flora in the alpine zone
-
-In accordance with level set method, Jaccard Index can be calculated under a sequence of $\alpha$ levels and the Jaccard Index plot is showed below in Figure 2.4. Grey lines are at $\alpha$ level 0.1 and 0.2, with percentages of matched segments 47.93% and 59.03% respectively for the Jaccard Index of weekdays and weekend sets. Note that percentage of matched rate stays constant starts from roughly $\alpha$ = 0.37, this is caused by no crash records within the rest of highway segments.  
-
-<center>
-```{r}
-load("~/wk_wkd.RData")
-source_lines("G:/caps/wk_wkd.R", c(208:218, 228:241))
+```{r fig.align='center',fig.cap="\\label{fig:fig6}KS test results for weekdays and weekend under the level sets using $J^{*}$ Index"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", 203:229)
 ```
-</center>
 
-#3. Predictability of Crash Data
-<Focus on spatial prediction. Given a time period, how well can we say *where* crash occurs>
+Therefore, it is significant in ordered distributions given reference weekend (Table \ref{tab:tab2}). This suggests that under the same size of segments, weekdays as reference to test weekend tends to be similar to true pattern. Also, weekdays as reference is more predictive than weekend as reference.
 
-##3.1 Data sources
-The dataset used is composed of two subsets: *Highway* data and *Crash* data, and focus on the state of Arkansas region. *Highway* data recorded the highway surface characteristics across the entire highway system in Arkansas. Categories and variables such as location  (logmile, longitude, latitude), traffic characteristics (average daily traffic), surface characteristics (type of road, sign of route, type of operation, median type and number of lanes) and others are included in this set. *Crash* data recorded individual crash cases at the spot. It includes time features (crash date, crash time), location (latitude, longitude, city, county, street), highway features (class of property, classification of trafficway, road system, intersection, junction relation), environmental features (light condition, road way surface condition) and crash conditions (interaction type, crash manner, number of fatals, number of injuries, number of vehicles) and others are included in this set.
+```{r}
+kable(ks.out, row.names = TRUE, caption = "\\label{tab:tab2}KS results under the level sets in Figure \\ref{fig:fig5}")
+```
+
+The purpose of conducting a KS test on a fixed allocation based surveillance is that patterns of the top desired percentage of total segments for compared distributions are intrigued instead of the entire original highway patterns. In ordered segments, unnecessary segments can be easily discarded (beyond a $\alpha$ level), and the desired set (within $\alpha$ level) can be used as a predictive reference (say weekdays instead of weekend in the previous demonstration) to foresee patterns with better performance and precision.
+
+\section{3. Predictability of Crash Data}\label{sec3}
+In this section, the methods mentioned in previous section are implemented on a variety of scenarios, e.g. time variation and segments varation. These scenarios will be built under level sets, compared using modified Jaccard Index and evaluated with KS test. The visualization of prediction will be showed lastly.
+
+\subsection{3.1 Data sources}\label{sec31}
+The dataset used is composed of two subsets: *Highway* data and *Crash* data, and focus on the state of Arkansas region. *Highway* data recorded the highway surface characteristics across the entire highway system in Arkansas. Categories and variables such as location  (logmile, longitude, latitude), traffic characteristics (average daily traffic), surface characteristics (type of road, sign of route, type of operation, median type and number of lanes) and others are included in this set. *Crash* data recorded individual crash cases at the spot. It includes time features (crash date, crash time), location (latitude, longitude, city, county, street), highway features (class of property, classification of trafficway, road system, intersection, junction relation), environmental features (light condition, road way surface condition) and crash conditions (interaction type, crash manner, number of fatals, number of injuries, number of vehicles) and others are included in this set (\cite{ref7}).
 
 The data used in this paper is obtained from The Center for Advanced Public Safety (CAPS) at The University of Alabama. CAPS also cooperates with centers in other universities to work on various projects in different areas such as traffic safety and engineering and analytics, and has access to these numerous valuable data sources such as highway and crash data in different time and areas. This benefits this paper to conduct thorough analyses.
 
-Grigorios Fountas a, Panagiotis Ch. Anastasopoulos, "A random thresholds random parameters hierarchical ordered probit analysis of highway accident injury-severities"
+\subsection{3.2 Concentration of crashes: empirical performance measures}\label{sec32}
+In previous demonstrations, crashes on the highway segments given different time periods, weekdays and weekend, are primarily showed a process of measuring data. KS test results are presented that weekdays may consider more predictive than weekend, i.e., a model can be built using weekdays set, and this model may also capture a similar pattern for weekend set. Other characteristrics of causes of crashes, e.g. time variation (\hyperref[sec321]{Section 3.2.1}) and segment variation (\hyperref[sec322]{Section 3.2.2}), will be compared through the same process as demonstrations earlier to uncover potential relationships in ordered distributions.  
 
-##3.2 Concentration of crashes: empirical performance measures
-In previous demonstrations, crashes behaviors along the highway given different time periods, weekdays and weekend, are primarily showed a process of measuring data. Results are also presented that weekdays and weekend may consider both predictive, i.e., a model can be built using one of both sets, and this model may also capture a similar pattern for the other set. Other characteristrics of causes of crashes, e.g. time variation and segment variation, will be compared through the same process as demonstrations earlier to uncover patterns of latent connections.  
+\subsubsection{3.2.1 Time variation}\label{sec321}
+Given different time periods, distributions of crashes are varied. Several comparisons of distributions from time to time will be illustrated at the various significance level. The reason to the various significance level is that crashes distributed on an entire route are rare and more sparse with the consideration of time. Small change in distribution results in tremendous or  negligible extremes. Therefore, the choice of significance level is arbituary to an observable extent of relationships in time variation.
 
-###3.2.1 Time variation
-Given different time periods, distributions of crashes are varied. Several comparisons of distributions from time to time will be illustrated and only insignificant groups are summarized under significance level of 0.05 in following tables.
-
-The magnitude of differences in distributions is generally unobservable, but subtle diversities in months become detected from the KS statistics (Table 3.1). December is comparatively distinct from any other months, and then January, June, July and November. On the other hand, February through May and August through October may be individually similar to each other respectively. Note that these classifications or similarities may follow a pattern of an academic year. A scenario can be established for distinctions between semester and off-semester periods. Also, off-semester months are varied in each other whereas semester months are similar; this results that semester months may be more appropriate for prediction than off-semester months due to the diversities of distributions in off-semester period.
+Note that the approximation of KS test and rare events condition result in a inconsistent in maximal distance and in *p-value*, so the magnitude of differences for both measures in distributions for months of year can be seen in Table \ref{tab:tab3} and \ref{tab:tab4}. The month used as reference is showed on the row whereas the compared groups are showed on the column. Cells in the table highlights in red to show the behavior under the significance level of 0.3. If only consider maximal distance in distributions ($D_{0.3} = 0.1722$ for this setting), May, June and  July (see from row vectors) which only have one significant pair under level sets individually, are appear to have better performance than any other months as reference.  
 
 ```{r}
-load("~/moy.RData")
-kable(month.lvl.result2, caption = "Table 3.1: KS tests using level set for months of year") %>%
-  kable_styling("striped", full_width = FALSE)
+load("moy.RData")
+data.frame(ks1$max.d) %>% 
+  mutate(jan = cell_spec(jan, "latex", color = ifelse(jan > ks1$bound, "red", "black")),
+         feb = cell_spec(feb, "latex", color = ifelse(feb > ks1$bound, "red", "black")),
+         mar = cell_spec(mar, "latex", color = ifelse(mar > ks1$bound, "red", "black")),
+         apr = cell_spec(apr, "latex", color = ifelse(apr > ks1$bound, "red", "black")),
+         may = cell_spec(may, "latex", color = ifelse(may > ks1$bound, "red", "black")),
+         jun = cell_spec(jun, "latex", color = ifelse(jun > ks1$bound, "red", "black")),
+         jul = cell_spec(jul, "latex", color = ifelse(jul > ks1$bound, "red", "black")),
+         aug = cell_spec(aug, "latex", color = ifelse(aug > ks1$bound, "red", "black")),
+         sep = cell_spec(sep, "latex", color = ifelse(sep > ks1$bound, "red", "black")),
+         oct = cell_spec(oct, "latex", color = ifelse(oct > ks1$bound, "red", "black")),
+         nov = cell_spec(nov, "latex", color = ifelse(nov > ks1$bound, "red", "black")),
+         dec = cell_spec(dec, "latex", color = ifelse(dec > ks1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab3}KS test: max.d using level sets for months of year with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks1$p.value) %>% 
+  mutate(jan = cell_spec(jan, "latex", color = ifelse(jan < 0.3, "red", "black")),
+         feb = cell_spec(feb, "latex", color = ifelse(feb < 0.3, "red", "black")),
+         mar = cell_spec(mar, "latex", color = ifelse(mar < 0.3, "red", "black")),
+         apr = cell_spec(apr, "latex", color = ifelse(apr < 0.3, "red", "black")),
+         may = cell_spec(may, "latex", color = ifelse(may < 0.3, "red", "black")),
+         jun = cell_spec(jun, "latex", color = ifelse(jun < 0.3, "red", "black")),
+         jul = cell_spec(jul, "latex", color = ifelse(jul < 0.3, "red", "black")),
+         aug = cell_spec(aug, "latex", color = ifelse(aug < 0.3, "red", "black")),
+         sep = cell_spec(sep, "latex", color = ifelse(sep < 0.3, "red", "black")),
+         oct = cell_spec(oct, "latex", color = ifelse(oct < 0.3, "red", "black")),
+         nov = cell_spec(nov, "latex", color = ifelse(nov < 0.3, "red", "black")),
+         dec = cell_spec(dec, "latex", color = ifelse(dec < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab4}KS test: p.value using level sets for months of year with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Days of week are also of interest to be compared and showed from Table \ref{tab:tab5} using maximal distance and \ref{tab:tab6} using *p-value* with a significance level of 0.3. The day used as a reference is showed on the row whereas compared days are showed on columns. Each day except for Sunday has one pair with a significant result. In a similar manner, Sunday appears to be more predictve while using as a reference. If only to predict from Monday to Saturday, each day during this period may also share the similar performance. 
+
+```{r}
+load("dow.RData")
+data.frame(ks1$max.d) %>% 
+  mutate(sun = cell_spec(sun, "latex", color = ifelse(sun > ks1$bound, "red", "black")),
+         mon = cell_spec(mon, "latex", color = ifelse(mon > ks1$bound, "red", "black")),
+         tue = cell_spec(tue, "latex", color = ifelse(tue > ks1$bound, "red", "black")),
+         wed = cell_spec(wed, "latex", color = ifelse(wed > ks1$bound, "red", "black")),
+         thu = cell_spec(thu, "latex", color = ifelse(thu > ks1$bound, "red", "black")),
+         fri = cell_spec(fri, "latex", color = ifelse(fri > ks1$bound, "red", "black")),
+         sat = cell_spec(sat, "latex", color = ifelse(sat > ks1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab5}KS test: max.d using level sets for days of week with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+
+```{r}
+data.frame(ks1$p.value) %>% 
+  mutate(sun = cell_spec(sun, "latex", color = ifelse(sun < 0.3, "red", "black")),
+         mon = cell_spec(mon, "latex", color = ifelse(mon < 0.3, "red", "black")),
+         tue = cell_spec(tue, "latex", color = ifelse(tue < 0.3, "red", "black")),
+         wed = cell_spec(wed, "latex", color = ifelse(wed < 0.3, "red", "black")),
+         thu = cell_spec(thu, "latex", color = ifelse(thu < 0.3, "red", "black")),
+         fri = cell_spec(fri, "latex", color = ifelse(fri < 0.3, "red", "black")),
+         sat = cell_spec(sat, "latex", color = ifelse(sat < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab6}KS test: p.value using level sets for days of week with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Two primary time separations, days of week and months of year, are ways of using one data to make predictions of the other data under the level sets. One other possibility is to separate time of day into different time periods. Considering time of day divided into 2-hour, 4-hour, 8-hour and 12-hour periods starting from 00:00 for each category, it is more likely to go extreme condition while more categories are used, i.e., slightly difference in a specific time period and a highway segments tends to be significant/insignificant. The boundary and range for different division for time of day are arbituary, other reasonable choices of time period are also applicable. 
+
+For 2-hour periods (Table \ref{tab:tab7} and Table \ref{tab:tab8}), all periods have poor performance in predicting from 00:00 to 06:00, which is expected since it is during normal bed time. From 08:00 to 16:00 is comparatively similar, each 2-hour period during this time gap should have close performance, and so is the time from 18:00 to 22:00. 06:00-08:00 and 16:00-18:00 these two periods can be refered as rush hours so that they are diverse to other day time periods. 22:00 until 06:00 should be the night time period that distinct patterns exist in their distributions.
+
+```{r}
+load("tod.RData")
+data.frame(ks1$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks1$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks1$bound, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 > ks1$bound, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 > ks1$bound, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 > ks1$bound, "red", "black")),
+         s7 = cell_spec(s7, "latex", color = ifelse(s7 > ks1$bound, "red", "black")),
+         s8 = cell_spec(s8, "latex", color = ifelse(s8 > ks1$bound, "red", "black")),
+         s9 = cell_spec(s9, "latex", color = ifelse(s9 > ks1$bound, "red", "black")),
+         s10 = cell_spec(s10, "latex", color = ifelse(s10 > ks1$bound, "red", "black")),
+         s11 = cell_spec(s11, "latex", color = ifelse(s11 > ks1$bound, "red", "black")),
+         s12 = cell_spec(s12, "latex", color = ifelse(s12 > ks1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab7}KS test: max.d using level sets for 2-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks1$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 < 0.3, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 < 0.3, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 < 0.3, "red", "black")),
+         s7 = cell_spec(s7, "latex", color = ifelse(s7 < 0.3, "red", "black")),
+         s8 = cell_spec(s8, "latex", color = ifelse(s8 < 0.3, "red", "black")),
+         s9 = cell_spec(s9, "latex", color = ifelse(s9 < 0.3, "red", "black")),
+         s10 = cell_spec(s10, "latex", color = ifelse(s10 < 0.3, "red", "black")),
+         s11 = cell_spec(s11, "latex", color = ifelse(s11 < 0.3, "red", "black")),
+         s12 = cell_spec(s12, "latex", color = ifelse(s12 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab8}KS test: p.value using level sets for 2-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+For 4-hour periods, only 00:00-04:00 has better predictability than others based on Table \ref{tab:tab9}. Recall from the inconsistency between *p-value* and maximal distance measures, however, any period between 08:00-24:00 on the other hand has better performance from Table \ref{tab:tab10}. In accordance with the previous 2-hour groups, the result from Table \ref{tab:tab10} appears to be reasonable.
+
+```{r}
+data.frame(ks2$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks1$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks1$bound, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 > ks1$bound, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 > ks1$bound, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 > ks1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab9}KS test: max.d using level sets for 4-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks2$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 < 0.3, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 < 0.3, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab10}KS test: p.value using level sets for 4-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+For 8-hour and 12-hour periods, the diversities between them in each separation are more similar from Table \ref{tab:tab11} to Table \ref{tab:tab14}. 
+
+```{r}
+data.frame(ks3$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks1$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab11}KS test: max.d using level sets for 8-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks3$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab12}KS test: p.value using level sets for 8-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks4$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab13}KS test: max.d using level sets for 12-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks4$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab14}KS test: p.value using level sets for 12-hour periods with significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+It can be approximately seen that two measures are actually presented similarly for 2-hour periods, inconsistent in 4-hour periods, negligible for few groups. Hypothetically, the separation for time of day may work better with groups somewhere near 4-hour gap with proper start and end points.
+
+\subsubsection{3.2.2 Segment variation}\label{sec322}
+In time variations and previous descriptions, the distance between each primitive segments is fixed to show a thorough picture of distributions. Binning can determine a variety of distances to provide a less complex and flexible method of measurement. In most cases, binning is arduous to determine a suitable bin size because of its classification of observations at the boundaries; however, binning is simple to implement and adjust to meet the needs. Two choices of binning size 1 and 0.5 will be showed to observe the influences of predictions.
+
+Figure \ref{fig:fig7} shows the comparisons of weekdays and weekend with different bin sizes under level sets. On the top left, black line is the true crash pattern on weekdays with bin size 1 under level sets whereas blue line is predictive pattern for weekend used weekdays as reference, and so forth. Recall from \ref{fig:fig5}, the diversity between two sets are obvious, yet here it is showed similar patterns between weekdays and weekend with binning. The KS test results for weekdays and weekend with binning are also supportive and showed from Table \ref{tab:tab15} Table to \ref{tab:tab18}.
+
+```{r fig.align='center',fig.cap="\\label{fig:fig7}Comparison for weekdays and weekend with bin sizes 1 (top) and 0.5 (bottom) under the level sets using $J^{*}$ Index"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R",c(294:330))
+```
+
+```{r}
+data.frame(ks.wkbin1$max.d) %>% 
+  mutate(wk = cell_spec(wk, "latex", color = ifelse(wk > ks.wkbin1$bound, "red", "black")),
+         wkd = cell_spec(wkd, "latex", color = ifelse(wk > ks.wkbin1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab15}KS test: max.d using level sets for weekdays and weekend with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.wkbin1$p.value) %>% 
+  mutate(wk = cell_spec(wk, "latex", color = ifelse(wk < 0.3, "red", "black")),
+         wkd = cell_spec(wkd, "latex", color = ifelse(wkd < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab16}KS test: p.value using level sets for weekdays and weekend with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks.wkbin0.5$max.d) %>% 
+  mutate(wk = cell_spec(wk, "latex", color = ifelse(wk > ks.wkbin0.5$bound, "red", "black")),
+         wkd = cell_spec(wkd, "latex", color = ifelse(wk > ks.wkbin0.5$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab17}KS test: max.d using level sets for weekdays and weekend with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.wkbin0.5$p.value) %>% 
+  mutate(wk = cell_spec(wk, "latex", color = ifelse(wk < 0.3, "red", "black")),
+         wkd = cell_spec(wkd, "latex", color = ifelse(wkd < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab18}KS test: p.value using level sets for weekdays and weekend with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Bin size of 1 and 0.5 for days of week are showed from Table \ref{tab:tab19} to Table \ref{tab:tab22}, respectively. Both results provide the same information in distributions using level sets. With bin size of 1, Wednesday and Thursday have better performance than other days although both have poor prediction on Sunday. With bin size of 0.5, Tuesday along with Wednesday and Thursday are more predictive. *P.value* and *max.d* measures are also consistent under both bin sizes individually.
+
+```{r}
+load("dow.RData")
+data.frame(ks.dowbin1$max.d) %>% 
+  mutate(sun = cell_spec(sun, "latex", color = ifelse(sun > ks.dowbin1$bound, "red", "black")),
+         mon = cell_spec(mon, "latex", color = ifelse(mon > ks.dowbin1$bound, "red", "black")),
+         tue = cell_spec(tue, "latex", color = ifelse(tue > ks.dowbin1$bound, "red", "black")),
+         wed = cell_spec(wed, "latex", color = ifelse(wed > ks.dowbin1$bound, "red", "black")),
+         thu = cell_spec(thu, "latex", color = ifelse(thu > ks.dowbin1$bound, "red", "black")),
+         fri = cell_spec(fri, "latex", color = ifelse(fri > ks.dowbin1$bound, "red", "black")),
+         sat = cell_spec(sat, "latex", color = ifelse(sat > ks.dowbin1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab19}KS test: max.d using level sets for days of week with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.dowbin1$p.value) %>% 
+  mutate(sun = cell_spec(sun, "latex", color = ifelse(sun < 0.3, "red", "black")),
+         mon = cell_spec(mon, "latex", color = ifelse(mon < 0.3, "red", "black")),
+         tue = cell_spec(tue, "latex", color = ifelse(tue < 0.3, "red", "black")),
+         wed = cell_spec(wed, "latex", color = ifelse(wed < 0.3, "red", "black")),
+         thu = cell_spec(thu, "latex", color = ifelse(thu < 0.3, "red", "black")),
+         fri = cell_spec(fri, "latex", color = ifelse(fri < 0.3, "red", "black")),
+         sat = cell_spec(sat, "latex", color = ifelse(sat < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab20}KS test: p.value using level sets for days of week with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks.dowbin0.5$max.d) %>% 
+  mutate(sun = cell_spec(sun, "latex", color = ifelse(sun > ks.dowbin0.5$bound, "red", "black")),
+         mon = cell_spec(mon, "latex", color = ifelse(mon > ks.dowbin0.5$bound, "red", "black")),
+         tue = cell_spec(tue, "latex", color = ifelse(tue > ks.dowbin0.5$bound, "red", "black")),
+         wed = cell_spec(wed, "latex", color = ifelse(wed > ks.dowbin0.5$bound, "red", "black")),
+         thu = cell_spec(thu, "latex", color = ifelse(thu > ks.dowbin0.5$bound, "red", "black")),
+         fri = cell_spec(fri, "latex", color = ifelse(fri > ks.dowbin0.5$bound, "red", "black")),
+         sat = cell_spec(sat, "latex", color = ifelse(sat > ks.dowbin0.5$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab21}KS test: max.d using level sets for days of week with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.dowbin0.5$p.value) %>% 
+  mutate(sun = cell_spec(sun, "latex", color = ifelse(sun < 0.3, "red", "black")),
+         mon = cell_spec(mon, "latex", color = ifelse(mon < 0.3, "red", "black")),
+         tue = cell_spec(tue, "latex", color = ifelse(tue < 0.3, "red", "black")),
+         wed = cell_spec(wed, "latex", color = ifelse(wed < 0.3, "red", "black")),
+         thu = cell_spec(thu, "latex", color = ifelse(thu < 0.3, "red", "black")),
+         fri = cell_spec(fri, "latex", color = ifelse(fri < 0.3, "red", "black")),
+         sat = cell_spec(sat, "latex", color = ifelse(sat < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab22}KS test: p.value using level sets for days of week with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Considering different bin size 1 and 0.5 for distributions of crashes for months of year from Table \ref{tab:tab23} to Table \ref{tab:tab26}, differences between months become distinct. For bin size 1, only August appears to have comparatively better performance in predicting crashes in January, April, May, June, September, October, November and December. For bin size 0.5, August still have better prediction compared to others, and have similar pattern with January, February, March, April, June, September and November. August stands out in both sizes but has different predictability in other months.
+
+```{r}
+load("moy.RData")
+data.frame(ks.moybin1$max.d) %>% 
+  mutate(jan = cell_spec(jan, "latex", color = ifelse(jan > ks.moybin1$bound, "red", "black")),
+         feb = cell_spec(feb, "latex", color = ifelse(feb > ks.moybin1$bound, "red", "black")),
+         mar = cell_spec(mar, "latex", color = ifelse(mar > ks.moybin1$bound, "red", "black")),
+         apr = cell_spec(apr, "latex", color = ifelse(apr > ks.moybin1$bound, "red", "black")),
+         may = cell_spec(may, "latex", color = ifelse(may > ks.moybin1$bound, "red", "black")),
+         jun = cell_spec(jun, "latex", color = ifelse(jun > ks.moybin1$bound, "red", "black")),
+         jul = cell_spec(jul, "latex", color = ifelse(jul > ks.moybin1$bound, "red", "black")),
+         aug = cell_spec(aug, "latex", color = ifelse(aug > ks.moybin1$bound, "red", "black")),
+         sep = cell_spec(sep, "latex", color = ifelse(sep > ks.moybin1$bound, "red", "black")),
+         oct = cell_spec(oct, "latex", color = ifelse(oct > ks.moybin1$bound, "red", "black")),
+         nov = cell_spec(nov, "latex", color = ifelse(nov > ks.moybin1$bound, "red", "black")),
+         dec = cell_spec(dec, "latex", color = ifelse(dec > ks.moybin1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab23}KS test: max.d using level sets for months of year with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.moybin1$p.value) %>% 
+  mutate(jan = cell_spec(jan, "latex", color = ifelse(jan < 0.3, "red", "black")),
+         feb = cell_spec(feb, "latex", color = ifelse(feb < 0.3, "red", "black")),
+         mar = cell_spec(mar, "latex", color = ifelse(mar < 0.3, "red", "black")),
+         apr = cell_spec(apr, "latex", color = ifelse(apr < 0.3, "red", "black")),
+         may = cell_spec(may, "latex", color = ifelse(may < 0.3, "red", "black")),
+         jun = cell_spec(jun, "latex", color = ifelse(jun < 0.3, "red", "black")),
+         jul = cell_spec(jul, "latex", color = ifelse(jul < 0.3, "red", "black")),
+         aug = cell_spec(aug, "latex", color = ifelse(aug < 0.3, "red", "black")),
+         sep = cell_spec(sep, "latex", color = ifelse(sep < 0.3, "red", "black")),
+         oct = cell_spec(oct, "latex", color = ifelse(oct < 0.3, "red", "black")),
+         nov = cell_spec(nov, "latex", color = ifelse(nov < 0.3, "red", "black")),
+         dec = cell_spec(dec, "latex", color = ifelse(dec < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab24}KS test: p.value using level sets for months of year with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks.moybin0.5$max.d) %>% 
+  mutate(jan = cell_spec(jan, "latex", color = ifelse(jan > ks.moybin0.5$bound, "red", "black")),
+         feb = cell_spec(feb, "latex", color = ifelse(feb > ks.moybin0.5$bound, "red", "black")),
+         mar = cell_spec(mar, "latex", color = ifelse(mar > ks.moybin0.5$bound, "red", "black")),
+         apr = cell_spec(apr, "latex", color = ifelse(apr > ks.moybin0.5$bound, "red", "black")),
+         may = cell_spec(may, "latex", color = ifelse(may > ks.moybin0.5$bound, "red", "black")),
+         jun = cell_spec(jun, "latex", color = ifelse(jun > ks.moybin0.5$bound, "red", "black")),
+         jul = cell_spec(jul, "latex", color = ifelse(jul > ks.moybin0.5$bound, "red", "black")),
+         aug = cell_spec(aug, "latex", color = ifelse(aug > ks.moybin0.5$bound, "red", "black")),
+         sep = cell_spec(sep, "latex", color = ifelse(sep > ks.moybin0.5$bound, "red", "black")),
+         oct = cell_spec(oct, "latex", color = ifelse(oct > ks.moybin0.5$bound, "red", "black")),
+         nov = cell_spec(nov, "latex", color = ifelse(nov > ks.moybin0.5$bound, "red", "black")),
+         dec = cell_spec(dec, "latex", color = ifelse(dec > ks.moybin0.5$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab25}KS test: max.d using level sets for months of year with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.moybin0.5$p.value) %>% 
+  mutate(jan = cell_spec(jan, "latex", color = ifelse(jan < 0.3, "red", "black")),
+         feb = cell_spec(feb, "latex", color = ifelse(feb < 0.3, "red", "black")),
+         mar = cell_spec(mar, "latex", color = ifelse(mar < 0.3, "red", "black")),
+         apr = cell_spec(apr, "latex", color = ifelse(apr < 0.3, "red", "black")),
+         may = cell_spec(may, "latex", color = ifelse(may < 0.3, "red", "black")),
+         jun = cell_spec(jun, "latex", color = ifelse(jun < 0.3, "red", "black")),
+         jul = cell_spec(jul, "latex", color = ifelse(jul < 0.3, "red", "black")),
+         aug = cell_spec(aug, "latex", color = ifelse(aug < 0.3, "red", "black")),
+         sep = cell_spec(sep, "latex", color = ifelse(sep < 0.3, "red", "black")),
+         oct = cell_spec(oct, "latex", color = ifelse(oct < 0.3, "red", "black")),
+         nov = cell_spec(nov, "latex", color = ifelse(nov < 0.3, "red", "black")),
+         dec = cell_spec(dec, "latex", color = ifelse(dec < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab26}KS test: p.value using level sets for months of year with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Considering different bin size 1 and 0.5 for distributions of crashes for time of day from Table \ref{tab:tab27} to Table \ref{tab:tab30} for 2-hour periods. 18:00-20:00 and 12:00-14:00 with bin size 1 and 0.5, are comparatively predictive in 00:00-02:00 and 08:00-22:00, and 10:00-16:00 and 18:00-20:00, respectively.
+
+```{r}
+load("tod.RData")
+data.frame(ks.tod12bin1$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod12bin1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod12bin1$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks.tod12bin1$bound, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 > ks.tod12bin1$bound, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 > ks.tod12bin1$bound, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 > ks.tod12bin1$bound, "red", "black")),
+         s7 = cell_spec(s7, "latex", color = ifelse(s7 > ks.tod12bin1$bound, "red", "black")),
+         s8 = cell_spec(s8, "latex", color = ifelse(s8 > ks.tod12bin1$bound, "red", "black")),
+         s9 = cell_spec(s9, "latex", color = ifelse(s9 > ks.tod12bin1$bound, "red", "black")),
+         s10 = cell_spec(s10, "latex", color = ifelse(s10 > ks.tod12bin1$bound, "red", "black")),
+         s11 = cell_spec(s11, "latex", color = ifelse(s11 > ks.tod12bin1$bound, "red", "black")),
+         s12 = cell_spec(s12, "latex", color = ifelse(s12 > ks.tod12bin1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab27}KS test: max.d using level sets for 2-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod12bin1$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 < 0.3, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 < 0.3, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 < 0.3, "red", "black")),
+         s7 = cell_spec(s7, "latex", color = ifelse(s7 < 0.3, "red", "black")),
+         s8 = cell_spec(s8, "latex", color = ifelse(s8 < 0.3, "red", "black")),
+         s9 = cell_spec(s9, "latex", color = ifelse(s9 < 0.3, "red", "black")),
+         s10 = cell_spec(s10, "latex", color = ifelse(s10 < 0.3, "red", "black")),
+         s11 = cell_spec(s11, "latex", color = ifelse(s11 < 0.3, "red", "black")),
+         s12 = cell_spec(s12, "latex", color = ifelse(s12 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab28}KS test: p.value using level sets for 2-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks.tod12bin0.5$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod12bin0.5$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod12bin0.5$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks.tod12bin0.5$bound, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 > ks.tod12bin0.5$bound, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 > ks.tod12bin0.5$bound, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 > ks.tod12bin0.5$bound, "red", "black")),
+         s7 = cell_spec(s7, "latex", color = ifelse(s7 > ks.tod12bin0.5$bound, "red", "black")),
+         s8 = cell_spec(s8, "latex", color = ifelse(s8 > ks.tod12bin0.5$bound, "red", "black")),
+         s9 = cell_spec(s9, "latex", color = ifelse(s9 > ks.tod12bin0.5$bound, "red", "black")),
+         s10 = cell_spec(s10, "latex", color = ifelse(s10 > ks.tod12bin0.5$bound, "red", "black")),
+         s11 = cell_spec(s11, "latex", color = ifelse(s11 > ks.tod12bin0.5$bound, "red", "black")),
+         s12 = cell_spec(s12, "latex", color = ifelse(s12 > ks.tod12bin0.5$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab29}KS test: max.d using level sets for 2-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod12bin0.5$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 < 0.3, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 < 0.3, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 < 0.3, "red", "black")),
+         s7 = cell_spec(s7, "latex", color = ifelse(s7 < 0.3, "red", "black")),
+         s8 = cell_spec(s8, "latex", color = ifelse(s8 < 0.3, "red", "black")),
+         s9 = cell_spec(s9, "latex", color = ifelse(s9 < 0.3, "red", "black")),
+         s10 = cell_spec(s10, "latex", color = ifelse(s10 < 0.3, "red", "black")),
+         s11 = cell_spec(s11, "latex", color = ifelse(s11 < 0.3, "red", "black")),
+         s12 = cell_spec(s12, "latex", color = ifelse(s12 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab30}KS test: p.value using level sets for 2-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Bin size 1 and 0.5 for distributions of crashes for time of day from Table \ref{tab:tab31} to Table \ref{tab:tab34} for 4-hour periods. 08:00-12:00 and 08:00-12:00 or 20:00-24:00 with bin size 1 and 0.5, are comparatively predictive in whole periods except 20:00-24:00, and 12:00-16:00 or  04:00-08:00, respectively.
+
+```{r}
+data.frame(ks.tod6bin1$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod6bin1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod6bin1$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks.tod6bin1$bound, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 > ks.tod6bin1$bound, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 > ks.tod6bin1$bound, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 > ks.tod6bin1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab31}KS test: max.d using level sets for 4-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod6bin1$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 < 0.3, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 < 0.3, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab32}KS test: p.value using level sets for 4-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks.tod6bin0.5$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod6bin0.5$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod6bin0.5$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks.tod6bin0.5$bound, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 > ks.tod6bin0.5$bound, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 > ks.tod6bin0.5$bound, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 > ks.tod6bin0.5$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab33}KS test: max.d using level sets for 4-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod6bin0.5$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black")),
+         s4 = cell_spec(s4, "latex", color = ifelse(s4 < 0.3, "red", "black")),
+         s5 = cell_spec(s5, "latex", color = ifelse(s5 < 0.3, "red", "black")),
+         s6 = cell_spec(s6, "latex", color = ifelse(s6 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab34}KS test: p.value using level sets for 4-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Bin size 1 and 0.5 for distributions of crashes for time of day from Table \ref{tab:tab35} to Table \ref{tab:tab38} for 8-hour periods. 08:00-16:00 or 16:00-24:00 and 16:00-24:00 with bin size 1 and 0.5, are comparatively predictive in whole periods, and 00:00-08:00, respectively.
+
+```{r}
+data.frame(ks.tod3bin1$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod3bin1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod3bin1$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks.tod3bin1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab35}KS test: max.d using level sets for 8-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod3bin1$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab36}KS test: p.value using level sets for 8-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks.tod3bin0.5$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod3bin0.5$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod3bin0.5$bound, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 > ks.tod3bin0.5$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab37}KS test: max.d using level sets for 8-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod3bin0.5$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black")),
+         s3 = cell_spec(s3, "latex", color = ifelse(s3 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab38}KS test: p.value using level sets for 8-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+Lastly, bin size 1 and 0.5 for distributions of crashes for time of day from Table \ref{tab:tab39} to Table \ref{tab:tab42} for 12-hour periods. 12:00-24:00 are slightly better with bin size 1 whereas no period fits properly with bin size 0.5.
+
+```{r}
+data.frame(ks.tod2bin1$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod2bin1$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod2bin1$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab39}KS test: max.d using level sets for 12-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod2bin1$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab40}KS test: p.value using level sets for 12-hour periods with size 1 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+```{r}
+data.frame(ks.tod2bin0.5$max.d) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 > ks.tod2bin0.5$bound, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 > ks.tod2bin0.5$bound, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab41}KS test: max.d using level sets for 12-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+
+data.frame(ks.tod2bin0.5$p.value) %>% 
+  mutate(s1 = cell_spec(s1, "latex", color = ifelse(s1 < 0.3, "red", "black")),
+         s2 = cell_spec(s2, "latex", color = ifelse(s2 < 0.3, "red", "black"))) %>% 
+kable("latex", row.names = TRUE, caption = "\\label{tab:tab42}KS test: p.value using level sets for 12-hour periods with size 0.5 and significance level = 0.3", escape = FALSE, booktabs = TRUE, linesep = "")
+```
+
+\subsection{3.3 Predictive performance}\label{sec33}
+After a variety of scenarios are compared and tools of surveillance plots and level levets are implemented, similarities and predictability that are discovered during the evaluation process will be tested in this section. A set of data, e.g. weekdays, which is considered more predctive, will be established as the baseline of a model, then the other set, e.g. weekend, will be tested based on this model.
+
+\subsubsection{3.3.1 Predictability on time variation}\label{sec331}
+Figure \ref{fig:fig8} shows the performance using weekdays as model based on the previous analysis, and the other as testing data.
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig8}Matched rate for weekdays and weekend using level sets"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", c(336:354))
+```
+
+For days of week (Figure \ref{fig:fig9}), Sunday is used as a model based on KS results using level sets, and others are compared to the reference model.
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig9}Matched rate for days of week using level sets"}
+load("dow.RData")
+source_lines("dow.R", c(92:105))
+```
+
+For months of year (Figure \ref{fig:fig10}), May, June and July are used as a model individually based on the analyses; rest of the months are compared to the model.
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig10}Matched rate for months of year using level sets"}
+load("moy.RData")
+source_lines("moy.R", c(91:124))
+```
+
+Time of day can subset into 2-hour, 4-hour and 8-hour periods (Figure \ref{fig:fig11} to Figure \ref{fig:fig14}). The base models are established based on level sets and KS results described in previous sections. In 2-hour periods, 04:00-06:00, 08:00-16:00 and 18:00-22:00 are used as model respectively. In 4-hour periods, 00:00-04:00 is used as a model. In 8-hour periods, each is used as a model and the rest is compared.
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig11}Matched rate for 2-hour periods using level sets"}
+load("tod.RData")
+source_lines("tod.R", c(210:236))
+```
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig12}Matched rate for 4-hour periods using level sets"}
+source_lines("tod.R", c(240:257))
+```
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig13}Matched rate for 8-hour periods using level sets"}
+source_lines("tod.R", c(261:283))
+```
+
+\subsubsection{3.3.2 Predictability on segment variation}\label{sec332}
+Different bin sizes of Logmile, 1 and 0.5, are compared to the model used similar distributions given different time periods. For specific group stands out from the KS results, a model used based on that group is constructed to the rest of datasets (e.g. Sunday is model, Monday through Saturday are testing data).
+
+For weekdays and weekend (Figure \ref{fig:fig14}), weekdays are first as model, and weekend is tested (left); then weekend is used as model and then testing weekdays (right). Two bin sizes, 1 (top) and 0.5 (bottom) are implemented.
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig14}Matched rate for weekdays and weekend with size 1 and 0.5 using level sets"}
+load("wk_wkd.RData")
+source_lines("wk_wkd.R", c(362:403))
+```
+
+Days of week with bin sizes 1 and 0.5 (Figure \ref{fig:fig15} and \ref{fig:fig16}) are manipulated. For size 1, Wednesday and Thursday are used as model respectively in accordance with previous KS results. For size 0.5, Tuesday through Thursday are served as model individually. 
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig15}Matched rate for days of week with size 1 using level sets"}
+load("dow.RData")
+source_lines("dow.R", c(114:135))
+```
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig16}Matched rate for days of week with size 0.5 using level sets"}
+source_lines("dow.R", c(137:157))
+```
+
+Months of year (Figure \ref{fig:fig17}) with bin size 1 (left) and 0.5 (right) are compared. For both sizes, only August is similar to more months than others and therefore, it is used as a model.
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig17}Matched rate for months of year with size 1 and 0.5 using level sets"}
+load("moy.RData")
+source_lines("moy.R", c(133:173))
+```
+
+Time of day with only bin size 1 for 2-hour, 4-hour, 8-hour divisions are showed from Figure \ref{fig:fig18} to \ref{fig:fig21}. For 2-hour division (Figure \ref{fig:fig18}), 18:00-20:00 is built as model. For 4-hour division (Figure \ref{fig:fig19}), 08:00-12:00 is used as reference. For 8-hour division (Figure \ref{fig:fig20}), two periods, 08:00-16:00 and 16:00-24:00 are used as models individually. Lastly, For 12-hour division, 12:00-24:00 is refered as model.
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig18}Matched rate for 2-hour periods with size 1 using level sets"}
+load("tod.RData")
+source_lines("tod.R", c(317:338))
+```
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig19}Matched rate for 4-hour periods with size 1 using level sets"}
+source_lines("tod.R", c(342:363))
+```
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig20}Matched rate for 8-hour periods with size 1 using level sets"}
+source_lines("tod.R", c(367:389))
+```
+
+```{r, fig.align='center',fig.cap="\\label{fig:fig21}Matched rate for 12-hour periods with size 1 using level sets"}
+source_lines("tod.R", c(393:414))
+```
+
+
+
+\begin{thebibliography}{9}
+
+\bibitem{ref1} 
+  \href{http://www.springer.com/us/book/9783642153518}
+  { Ismail Ayed, Amar Mitiche, 2010.
+  \textit{Variational and Level Set Methods in Image Segmentation}. P61.}
   
-```
+\bibitem{ref2} 
+  \href{http://www.springer.com/us/book/9783319017112}
+  {Martin Burger, Andrea Mennucci, Stanley Osher, Martin Rumpf, 2008.
+  \textit{Level Set and PDE Based Reconstruction Methods in Imaging}. P15.}
 
-Classifications based on semester and off-semestere choice using distributions of months are shown in Figure 3.1. For semester class curves appear to be more consistent and slightly diverse as the proportion of segments increases whereas curves for off-semester class are more diverse across a sequence of $\alpha$ values. It is possible that using any one of semester months to construct the baseline is likely to have similar predictability in the same class. For off-semester months, choice of months as the baseline results in comparatively lower predictability.
+\bibitem{ref3} 
+  \href{http://www.sciencedirect.com/science/article/pii/S187603411730206X}
+  {Kumar S, et al.
+  \textit{Healthcare associated infections in neonatal intensive care unit and its correlation with environmental surveillance}. Journal of Infection and Public Health (2017).}
 
-<center>
-```{r}
-load("~/moy.RData")
-source_lines("G:/caps/moy.R", 125:157)
-```
-</center>
+\bibitem{ref4} 
+  \href{http://www.sciencedirect.com/science/article/pii/S2093791116300610}
+  {Melanie Carder et al.
+  \textit{The Health and Occupation Research Network: An Evolving
+Surveillance System}. Safety and Health at Work 8 (2017) 231-236.}
 
-<center>
-```{r}
-load("~/moy.RData")
-source_lines("G:/caps/moy.R", 164:194)
-```
-</center>
+\bibitem{ref5}
+  \href{http://onlinelibrary.wiley.com/doi/10.1111/j.1469-8137.1912.tb05611.x/pdf}
+  {Paul Jaccard, 1912.
+  \textit{The distribution of the flora in the alpine zone}. The New Phytologist, 11 (2).}
 
-Days of week are also of interest to be compared in the following (Figure 3.3) along with KS results from Table 3.2. Monday through Wednesday are comparatively stable and almost as same as each other in patterns; Thursday through Sunday are distinct from each other. A possible classification may be before-midweek and after-midweek patterns. A before-midweek based structure appears to be more representive and stable than the other group under this circumstance. Likewise, each of before-midweek based structure is expected to have higher predictability than of after-midweek based structure.
-
-<center>
-```{r}
-load("~/dow.RData")
-kable(dow.lvl.result2 %>% filter(p.value>=0.05), 
-      caption = "Table 3.2: KS tests using level set for days of week") %>%
-  kable_styling("striped", full_width = FALSE) 
+\bibitem{ref6} 
+  Jean Gibbons, Subhabrata Chakraborti, 2003.
+  \textit{Nonparametric Statistical Inference}. 4e.
   
-```
-</center>
-<-------------->
+\bibitem{ref7} 
+  \href{http://dx.doi.org/10.1016/j.amar.2017.03.002}
+  {Grigorios Fountas, Panagiotis Anastasopoulos, 2017.
+  \textit{A random thresholds random parameters hierarchical ordered probit analysis of highway accident injury-severities}. Analytic Methods in Accident Research 15 1¡V16.}
 
-
-<center>
-```{r}
-load("~/dow.RData")
-source_lines("G:/caps/dow.R", 113:146)
-```
-</center>
-
-<center>
-```{r}
-load("~/dow.RData")
-source_lines("G:/caps/dow.R", 155:186)
-```
-</center>
-
-Two primary time separations, days of week and months of year, are ways of using one data to make predictions of the other data. One other possibility is to separate time of day into different time periods. The purpose of screening data beforehand is to ensure the quality of data used is predictive to capture the true pattern of crashes based on certain characteristics.
-
-Considering time of day divided into 2-hour, 4-hour, 8-hour and 12-hour periods starting from 00:00 for each category, it is more likely to go extreme condition while more categories are used, i.e., slightly difference in a specific time period and a highway segments tends to be significant. The boundary and range for different division for time of day are arbituary, other reasonable choices of time period are also applicable. For 2-hour periods, from 12:00 to 20:00, are showed to be insignificant but at the boundary of 0.05; for 4-hour periods, from 04:00 to 20:00 tend to have similar patterns; for 8-hour periods, 08:00 to 24:00, are also insignificant but close to the significant boundary; 12-hour periods are similar to each other.
-
-<center>
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(79:82, 101:108))
-kable(tod.lvl.result %>% filter(p.value>=0.05), 
-      caption = "Table 3.3: KS tests using level set for time of day in 12 shifts") %>%
-  kable_styling("striped", full_width = FALSE)
-
-source_lines("G:/caps/tod.R", c(84:87, 101:108))
-kable(tod.lvl.result %>% filter(p.value>=0.05), 
-      caption = "Table 3.4: KS tests using level set for time of day in 6 shifts") %>%
-  kable_styling("striped", full_width = FALSE)
-
-source_lines("G:/caps/tod.R", c(89:92, 101:108))
-kable(tod.lvl.result %>% filter(p.value>=0.05), 
-      caption = "Table 3.5: KS tests using level set for time of day in 3 shifts") %>%
-  kable_styling("striped", full_width = FALSE)
-
-source_lines("G:/caps/tod.R", c(94:97, 101:108))
-kable(tod.lvl.result %>% filter(p.value>=0.05), 
-      caption = "Table 3.6: KS tests using level set for time of day in 2 shifts") %>%
-  kable_styling("striped", full_width = FALSE)
-```
-</center>
-<-------------->
-
-
-<center>
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(79:82, 101:104, 116:129)) #2-hour
-source_lines("G:/caps/tod.R", c(84:87, 101:104, 119:129)) #4-hour
-source_lines("G:/caps/tod.R", c(89:92, 101:104, 119:129)) #8-hour
-source_lines("G:/caps/tod.R", c(94:97, 101:104, 119:132)) #12-hour
-```
-
-</center>
-
-###3.2.2 Segment variation
-In time variations and previous descriptions, the distance between each primitive segments is fixed to show a thorough picture of distributions. Binning can determine a variety of distances to provide a less complex and flexible method of measurement. In most cases, binning is arduous to determine a suitable bin size because of its classification of observations at the boundaries; however, binning is simple to implement and adjust to requirements. Couple choices of binning size will be showed to observe the influences of predictions.
-
-Recall from the comparison between weekdays and weekend data, bin sizes of 1 and 0.5 for weekdays and weekend are compared under the ordered bins and level sets (Figure 3.6 and 3.7). In the demonstration of KS test previously (Section 2.3.1), the statistic is $D_{m,n} =$ 0.085, the maximal differences between distributions for two bin sizes is 0.0177 and 0.0153 repectively, which are insigificant and expecxted, because binning will result data being smoother.
-
-<center>
-```{r}
-load("~/wk_wkd.RData")
-source_lines("G:/caps/wk_wkd.R", 306:350)
-source_lines("G:/caps/wk_wkd.R", 354:390)
-```
-</center>
-
-Bin size of 1 and 0.5 for days of week are showed in Figure 3.8 and 3.9 along with KS results in table 3.7 and 3.8, respectively. Both results show insignificance in distributions whether in ordered bins or level sets fashion. With bin size of 1, Sunday appears to slightly stand out compared to the others although it shows insignificant. For the rest of the days, each of them can be used as reference and may still have the smiliar predictablity.
-
-<center>
-```{r}
-load("~/dow.RData")
-source_lines("G:/caps/dow.R", c(194:217))
-kable(dow.lvl.result3, caption = "Table 3.7: KS tests using level set with bin size 1 for days of week") %>% kable_styling("striped", full_width = FALSE) 
-
-source_lines("G:/caps/dow.R", c(258:276))
-kable(dow.lvl.result4, caption = "Table 3.8: KS tests using level set with bin size 0.5 for days of week") %>% kable_styling("striped", full_width = FALSE)
-```
-</center>
-<-------------->
-
-
-<center>
-```{r}
-load("~/dow.RData")
-source_lines("G:/caps/dow.R", c(194:207, 223:250))
-source_lines("G:/caps/dow.R", c(258:266, 282:310))
-```
-</center>
-
-Considering different bin size 1 and 0.5 for distributions of crashes for months of year from Table 3.9 and 3.10 along with Figure 3.10 and 3.11, differences between months become smaller. For bin size 1, only June and August still have apparent gap in distributions. For bin size 0.5, February has the similar pattern as April, July and November before binning; here it results in difference between February and July after binning. This may account for classifications for observations at the boundaries that sometimes cause inconsistent results. January, March, September and December are not showed on these table, which may suggest a close performance on predictions using any of them because of the similarities with other months.
-
-<center>
-```{r}
-load("~/moy.RData")
-source_lines("G:/caps/moy.R", c(200:226))
-kable(moy.lvl.result3 %>% filter(p.value<=0.05), caption = "Table 3.9: KS tests using level set with bin size 1 for months of year") %>% kable_styling("striped", full_width = FALSE) 
-
-source_lines("G:/caps/moy.R", c(266:288))
-kable(moy.lvl.result4 %>% filter(p.value<=0.05), caption = "Table 3.10: KS tests using level set with bin size 0.5 for months of year") %>% kable_styling("striped", full_width = FALSE) 
-```
-</center>
-<-------------->
-
-
-<center>
-```{r}
-load("~/moy.RData")
-source_lines("G:/caps/moy.R", c(200:214, 232:259))
-source_lines("G:/caps/moy.R", c(266:276, 293:320))
-```
-</center>
-
-Considering different bin size 1 and 0.5 for distributions of crashes for time of day from Table 3.11-17 along with Figure 3.11-14. For 12 shifts, 20:00-22:00 and 02:00-06:00 with bin size 1, 00:00-04:00 with bine size 0.5, are apparently different in distributions from rest of the groups individually; for 6 shifts, only 04:00-08:00 and 20:00-24:00 with bin size 1 is different than the rest whereas all are similar for bin size 0.5; for 3 shifts and 2 shifts are individually showed similar in its own separations.
-
-<center>
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(79:82, 140:141, 146, 150, 184:188))
-kable(tod.lvl.result2 %>% filter(p.value<=0.05), 
-      caption = "Table 3.11: KS tests using level set for time of day bin size 1 in 12 shifts") %>%  kable_styling("striped", full_width = FALSE)
-source_lines("G:/caps/tod.R", c(79:82, 140, 142, 146, 150, 184:188))
-kable(tod.lvl.result2 %>% filter(p.value<=0.05), 
-      caption = "Table 3.12: KS tests using level set for time of day bin size 0.5 in 12 shifts") %>%  kable_styling("striped", full_width = FALSE)
-```
-
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(84:87, 140:141, 146, 150, 184:188))
-kable(tod.lvl.result2 %>% filter(p.value<=0.05), 
-      caption = "Table 3.13: KS tests using level set for time of day bin size 1 in 6 shifts") %>%  kable_styling("striped", full_width = FALSE)
-#for bin size 0.5, all insignificant
-```
-
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(89:92, 140:141, 146, 150, 184:188))
-kable(tod.lvl.result2 %>% filter(p.value>=0.05), 
-      caption = "Table 3.14: KS tests using level set for time of day bin size 1 in 3 shifts") %>%  kable_styling("striped", full_width = FALSE)
-source_lines("G:/caps/tod.R", c(89:92, 140, 142, 146, 150, 184:188))
-kable(tod.lvl.result2 %>% filter(p.value>=0.05), 
-      caption = "Table 3.15: KS tests using level set for time of day bin size 0.5 in 3 shifts") %>%  kable_styling("striped", full_width = FALSE)
-```
-
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(94:97, 140:141, 146, 150, 184:188))
-kable(tod.lvl.result2, 
-      caption = "Table 3.16: KS tests using level set for time of day bin size 1 in 2 shifts") %>%  kable_styling("striped", full_width = FALSE)
-source_lines("G:/caps/tod.R", c(94:97, 140, 142, 146, 150, 184:188))
-kable(tod.lvl.result2, 
-      caption = "Table 3.17: KS tests using level set for time of day bin size 0.5 in 2 shifts") %>%  kable_styling("striped", full_width = FALSE)
-```
-</center>
-<-------------->
-
-
-<center>
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(79:82, 140:141, 143:175)) #2-hour, bin size = 1
-source_lines("G:/caps/tod.R", c(142, 155:175)) #2-hour, bin size = 0.5
-fig.des <- expression(paste("Figure 3.11: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 12 shifts", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-
-source_lines("G:/caps/tod.R", c(84:87, 140:141, 143:175)) #4-hour, bin size = 1
-source_lines("G:/caps/tod.R", c(142, 155:175)) #4-hour, bin size = 0.5
-fig.des <- expression(paste("Figure 3.12: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 6 shifts", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-
-source_lines("G:/caps/tod.R", c(89:92, 140:141, 143:175)) #8-hour, bin size = 1
-source_lines("G:/caps/tod.R", c(142, 155:175)) #8-hour, bin size = 0.5
-fig.des <- expression(paste("Figure 3.13: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 3 shifts", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-
-source_lines("G:/caps/tod.R", c(94:97, 140:141, 143:175)) #12-hour, bin size = 1
-source_lines("G:/caps/tod.R", c(142, 155:175)) #12-hour, bin size = 0.5
-fig.des <- expression(paste("Figure 3.14: ordered bins with bin size = 1 (top) and 0.5 (bottom) for time of day in 2 shifts", sep = ""))
-mtext(fig.des, side = 1, adj = 0.5, outer = TRUE)
-```
-</center>
-
-##3.3 Predictive performance
-After a variety of scenarios are compared and tools of surveillance plots and level levets are implemented, similarities and predictability that are discovered during the evaluation process will be tested in this section. A set of data, e.g. weekdays, which is considered more predctive, will be established as the baseline of a pseudo model, then the other set, e.g. weekend, will be tested based on this model.
-
-##3.3.1 Predictability on time variation
-Figure 3.15 shows the performance using one of the datasets, weekdays and weekend, as model, and the other as testing data. Using weekdays as model (black) has constantly higher predictability than using weekend as model (blue).
-
-<center>
-```{r}
-load("~/wk_wkd.RData")
-source_lines("G:/caps/wk_wkd.R", c(6:8, 396:415))
-```
-</center>
-
-For days of week (Figure 3.16 and Table 3.18), Monday through Wednesday are combined and used as a model based on the level sets surveillance and KS results; Thursday through Sunday are compared to the reference model. For each testing datasets, Sunday is the best under Mon-Wed model, 10 segments with highest crash rates can be captured; Friday is the worst but still can be all captured using Mon-Wed model while up to 22 segments with highest crash rates on Friday are compared.
-
-<center>
-```{r}
-load("~/dow.RData")
-source_lines("G:/caps/dow.R", c(8:17, 321:348))
-
-kable(dow.mod[1:15,], caption = "Table 3.18: match rate table for Mon-Wed model") %>%  kable_styling("striped", full_width = FALSE)
-```
-</center>
-
-For months of year (Figure 3.17 and Table 3.19), semester months (February through May and August through October) are combined and used as a model based on the analyses; rest of the months are compared to the model. January is the best using this model, 7 segments with highest crash rates on January can be captured; June, July, November and December are relatively predictive. Top 10 segments on June and July, 9 and 8 segments on November and December respectively, can be all captured.
-
-<center>
-```{r}
-load("~/moy.RData")
-source_lines("G:/caps/moy.R", c(8:17, 334:361))
-
-kable(moy.mod[1:10,], caption = "Table 3.19: match rate table for Feb-May and Aug-Oct model") %>%  kable_styling("striped", full_width = FALSE)
-```
-</center>
-
-Time of day can subset into 2-hour, 4-hour and 8-hour periods (Figure 3.18, Table 3.20-22). The base models are established based on level sets and KS results described in previous sections. In 2-hour periods, 12:00-18:00 are used for model. Except for 00:00-06:00 period with rarity of crashes that can be all captured as expected, up to top 11 crash rate segments can be all inclusive for the other 2-hour periods. In 4-hour periods, 04:00-20:00 periods are used as a model, and the other 2 4-hour periods will be compared to reference. Similar to 2-hour periods, top 14 segments from 20:00-24:00 will match model predictions. In 8-hour periods, 08:00-24:00 are used as a model and all 9 segments are matched using this model.
-
-<center>
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(245:246))
-source_lines("G:/caps/tod.R", c(79:82, 201:214, 241, 248:254, 256)) #2-hour
-source_lines("G:/caps/tod.R", c(84:87, 217:228, 242, 248:254, 257)) #4-hour
-source_lines("G:/caps/tod.R", c(89:92, 231:236, 243, 248:254, 258)) #8-hour
-source_lines("G:/caps/tod.R", c(260:261))
-```
-</center>
-<----------->
-
-<center>
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(79:82, 201:214)) #2-hour
-kable(tod.mod[1:10,], caption = "Table 3.20: 2-hour match rate table for 12:00-18:00 model") %>%  kable_styling("striped", full_width = FALSE)
-
-source_lines("G:/caps/tod.R", c(84:87, 217:228)) #4-hour
-kable(tod.mod[1:10,], caption = "Table 3.21: 4-hour match rate table for 04:00-20:00 model") %>%  kable_styling("striped", full_width = FALSE)
-
-source_lines("G:/caps/tod.R", c(89:92, 231:236)) #8-hour
-kable(tod.mod[1:10,], caption = "Table 3.22: 8-hour match rate table for 08:00-24:00 model") %>%  kable_styling("striped", full_width = FALSE)
-```
-</center>
-
-##3.3.2 Predictability on segment variation
-Different bin sizes of Logmile, 1 and 0.5, are compared to the model used similar distributions given different time periods. For the KS results within all groups are smiliar to each other, a model used all data is constructed and all datasets separated by different periods (e.g. Sunday through Saturday) are used as testing sets. For the other manipulation is that similar groups are combined and referenced as model, and the other groups will be testing using reference model.
-
-For weekdays and weekend (Figure 3.19), weekdays are first as model, and weekend is tested (black); then weekend is used as model and then testing weekdays (blue). Two bin sizes, 1 (left) and 0.5 (right) are implemented. It appears that both sets are fairly predictive except for weekend model with bin size 0.5 for the reasons of the classifications of observations at boundaries and rarity of crashes on weekend.
-
-<center>
-```{r}
-load("~/wk_wkd.RData")
-source_lines("G:/caps/wk_wkd.R", c(306:310, 425:429, 431:442))
-source_lines("G:/caps/wk_wkd.R", c(354:356, 425:429, 434:445))
-```
-</center>
-
-Days of week (Figure 3.20) with bin sizes 1 (left) and 0.5 (right) are manipulated. For size 1, Monday through Saturday are insignificant compared to Sunday in accordance with KS results in Section 3.2.2 and thus combined together and built as model. Sunday is then tested. For size 0.5, days of week are all comparatively insignificant and thus whole week is used as a model and each day is then tested. For Sunday, it appears to have similar predictability for both sizes. 
-
-<center>
-```{r}
-load("~/dow.RData")
-source_lines("G:/caps/dow.R", c(359:371, 399:400, 402, 405:412))
-source_lines("G:/caps/dow.R", c(376:395, 403, 405:411, 413:415))
-```
-</center>
-
-Months of year (Figure 3.21) with bin size 1 (left) and 0.5 (right) are compared. For size 1, only February and April are distinct from each other and therefore are used as testing data. For size 0.5, January, March, September and December are combined and served as a reference, the rest of months are compared to it.
-
-<center>
-```{r}
-load("~/moy.RData")
-source_lines("G:/caps/moy.R", c(371:392, 425:428, 431:438))
-source_lines("G:/caps/moy.R", c(399:418, 429:437, 439:442))
-```
-</center>
-
-Time of day with bin size 1 and 0.5 for 2-hour, 4-hour, 8-hour divisions are showed in Figure 3.22. For 2-hour division (top), 00:00-02:00, 06:00-18:00 and 22:00-24:00 with size 1 are built as model whereas every periods with size 0.5 except for 00:00-04:00 are used. For 4-hour division (middle), 00:00-04:00 and 08:00-20:00 with size 1 are combined whereas all with size 0.5 are included and retested. For 8-hour division, all periods with each size are combined then retested based on the combined model.
-
-<center>
-```{r}
-load("~/tod.RData")
-source_lines("G:/caps/tod.R", c(79:82, 275:276, 279, 282:298, 327, 330:341))
-source_lines("G:/caps/tod.R", c(79:82, 277, 280:295, 300, 327, 333:341))
-
-source_lines("G:/caps/tod.R", c(84:87, 275:276, 303, 282:295, 312, 327, 333:341))
-source_lines("G:/caps/tod.R", c(84:87, 277, 304, 282:290, 307:310, 313:315, 328, 333:339, 342))
-
-source_lines("G:/caps/tod.R", c(89:92, 275:276, 318, 282:290, 307:310, 322, 328,  333:339, 342))
-source_lines("G:/caps/tod.R", c(89:92, 277, 319, 282:290, 307:310, 322, 328,  333:339, 342:346))
-```
-</center>
+\end{thebibliography}
